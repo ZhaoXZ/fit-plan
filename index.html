@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0e1014">
+<title>增肌计划</title>
+<style>
+:root{--bg:#0e1014;--card:#171a21;--card2:#1f2330;--line:#272b36;--text:#eceef3;--muted:#8d93a1;--accent:#5b8dff;--accent2:#1f3367;--ok:#39d98a;--ok2:#133a28;--warn:#ffb020;--danger:#ff5d5d;--u:#5b8dff;--l:#b48cff;--r:#39d98a;--x:#ffb020;--radius:16px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;padding-bottom:calc(84px + env(safe-area-inset-bottom));overscroll-behavior-y:none}
+header{position:sticky;top:0;z-index:5;background:rgba(14,16,20,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:calc(10px + env(safe-area-inset-top)) 16px 8px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}
+header h1{font-size:19px;margin:0;font-weight:700}
+header .sub{color:var(--muted);font-size:12px}
+main{padding:12px 12px 0;overflow-x:hidden}
+.ex .sets,.ex .head{min-width:0}
+.page{display:none}.page.active{display:block;animation:fade .18s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.card h2{font-size:13px;margin:0 0 10px;color:var(--muted);font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.card h3{font-size:16px;margin:0 0 6px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+label.f{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+input,select,textarea,button{font:inherit;color:var(--text)}
+input,select,textarea{width:100%;background:#0e1014;border:1px solid var(--line);border-radius:12px;padding:10px 12px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{min-height:64px;resize:vertical}
+button{background:var(--accent);border:0;border-radius:12px;padding:11px 14px;font-weight:600;cursor:pointer}
+button:active{transform:scale(.97)}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}
+button.ok{background:var(--ok);color:#06240f}
+button.sm{padding:6px 10px;font-size:13px;border-radius:10px}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;background:var(--card2);color:var(--muted);white-space:nowrap}
+.pill.u{background:var(--accent2);color:#b9ceff}.pill.l{background:#36285a;color:#dcc8ff}.pill.r{background:var(--ok2);color:#8ff0bd}.pill.x{background:#3f2d12;color:#ffd58a}
+.pill.ok{background:var(--ok2);color:#8ff0bd}.pill.warn{background:#3f2d12;color:#ffd58a}
+/* 周条 */
+.week{display:grid;grid-template-columns:28px repeat(7,1fr) 28px;gap:4px;align-items:center}
+.week .nav{color:var(--muted);text-align:center;font-size:20px;line-height:1}
+.week .d{text-align:center;padding:6px 0;border-radius:12px;background:#0e1014;border:1px solid transparent}
+.week .d small{display:block;font-size:11px;color:var(--muted)}
+.week .d b{display:block;font-size:15px;font-weight:600}
+.week .d .dot{display:block;width:8px;height:8px;border-radius:50%;margin:3px auto 0;background:#2a2f3a}
+.week .d.u .dot{background:var(--u)}.week .d.l .dot{background:var(--l)}.week .d.r .dot{background:var(--r)}.week .d.x .dot{background:#3a3f4a}
+.week .d.done .dot{box-shadow:0 0 0 2px var(--ok)}
+.week .d.cur{border-color:var(--accent);background:var(--accent2)}
+.week .d.future{opacity:.45}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;padding:7px 12px;border-radius:999px;background:var(--card2);color:var(--muted);font-size:13px;border:1px solid transparent}
+.chip.on{background:var(--accent2);color:#c9d8ff;border-color:var(--accent)}
+.bar{height:6px;background:#0e1014;border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--ok));width:0;transition:width .3s}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat div{background:#0e1014;border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font-size:20px}.stat small{color:var(--muted);font-size:12px}
+/* 动作卡 */
+.ex{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
+.ex.done{border-color:#1f4d35}
+.ex .head{display:flex;gap:12px;padding:12px;align-items:center}
+.ex .thumb{width:64px;height:64px;border-radius:12px;background:#fff;flex:0 0 64px;object-fit:cover}
+.ex .t{flex:1;min-width:0}
+.ex .t b{display:block;font-size:16px;line-height:1.3}
+.ex.done .t b{color:var(--ok)}
+.ex .t small{display:block;color:var(--muted);font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ex .t .meta{margin-top:4px;display:flex;gap:6px;flex-wrap:wrap}
+.ex .more{color:var(--muted);font-size:22px;padding:0 4px}
+.sets{padding:0 12px 10px}
+.set{display:grid;grid-template-columns:22px 34px minmax(0,1fr) 34px minmax(0,1fr) 42px;gap:6px;align-items:center;margin-bottom:6px;min-width:0}
+.set .n{color:var(--muted);font-size:12px;text-align:center}
+.set input{padding:9px 4px;text-align:center;font-size:16px;border-radius:10px;min-width:0;width:100%}
+.set input::-webkit-outer-spin-button,.set input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.set input[type=number]{-moz-appearance:textfield}
+.set .pm{height:38px;border-radius:10px;background:var(--card2);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;user-select:none}
+.set .chk{height:38px;border-radius:10px;border:1px solid var(--line);background:#0e1014;display:flex;align-items:center;justify-content:center;font-size:18px}
+.set.done input{color:var(--ok)}.set.done .chk{background:var(--ok);border-color:var(--ok);color:#06240f}
+.sets .foot{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.sets .foot .last{font-size:12px;color:var(--muted)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .d{aspect-ratio:1;border-radius:9px;background:#0e1014;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted)}
+.cal .d.u{background:var(--accent2);color:#b9ceff}.cal .d.l{background:#36285a;color:#dcc8ff}.cal .d.r{background:var(--ok2);color:#8ff0bd}.cal .d.x{background:#3f2d12;color:#ffd58a}
+.cal .d.today{outline:2px solid var(--accent)}.cal .h{color:var(--muted);text-align:center;font-size:11px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:7px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:500;font-size:12px;white-space:nowrap}
+tr:last-child td,tr:last-child th{border-bottom:0}
+.macro{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.macro div{background:#0e1014;border-radius:12px;padding:10px 6px;text-align:center}
+.macro b{display:block;font-size:19px}.macro small{color:var(--muted);font-size:11px}
+ul,ol{padding-left:20px;margin:6px 0}li{margin:4px 0}
+.muted{color:var(--muted);font-size:13px}
+svg.chart{width:100%;height:150px;display:block}
+/* 路线图 */
+.road{position:relative;padding-left:22px}
+.road:before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.road .ph{position:relative;margin-bottom:14px}
+.road .ph:before{content:"";position:absolute;left:-20px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--line);border:2px solid var(--bg)}
+.road .ph.on:before{background:var(--accent);box-shadow:0 0 0 3px var(--accent2)}
+.road .ph b{display:block}.road .ph small{color:var(--muted);display:block}
+/* 动作库列表 */
+.lib{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.lib:last-child{border-bottom:0}
+.lib img{width:48px;height:48px;border-radius:10px;background:#fff;flex:0 0 48px}
+.lib b{display:block;font-size:15px}.lib small{color:var(--muted);font-size:12px}
+.lib .r{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
+/* 底部导航 */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:rgba(17,19,25,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:transparent;color:var(--muted);border-radius:0;padding:10px 0 8px;font-size:11px;font-weight:500}
+nav button.active{color:var(--accent)}
+nav button span{display:block;font-size:22px;line-height:1.2}
+/* 休息计时 */
+.timer{position:fixed;left:12px;right:12px;bottom:calc(72px + env(safe-area-inset-bottom));z-index:6;background:var(--card2);border:1px solid var(--accent);border-radius:14px;padding:10px 14px;display:none;align-items:center;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.timer.show{display:flex}
+.timer b{font-size:26px;font-variant-numeric:tabular-nums;min-width:70px}
+.timer small{color:var(--muted);display:block;font-size:12px}
+.timer .bar{flex:1}
+/* 详情抽屉 */
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.6);display:none;align-items:flex-end}
+.sheet.show{display:flex}
+.sheet .panel{background:var(--bg);width:100%;max-height:92vh;border-radius:22px 22px 0 0;overflow-y:auto;padding:0 16px calc(20px + env(safe-area-inset-bottom));animation:up .22s ease}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.sheet .grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:10px auto 12px}
+.sheet .gif{width:100%;max-width:300px;aspect-ratio:1;border-radius:16px;background:#fff;display:block;margin:0 auto 10px;object-fit:contain}
+.sheet h2{font-size:20px;margin:0 0 2px}
+.sheet .en{color:var(--muted);font-size:13px;margin-bottom:8px}
+.sheet h4{font-size:13px;color:var(--muted);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.5px}
+.sheet .alt{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.sheet .alt div{flex:0 0 auto;text-align:center;font-size:12px;color:var(--muted)}
+.sheet .alt img{width:64px;height:64px;border-radius:12px;background:#fff;display:block;margin-bottom:4px}
+.sheet .attr{font-size:11px;color:#555b68;text-align:center;margin-top:12px}
+.toast{position:fixed;left:50%;bottom:calc(140px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#2a2f3a;padding:9px 18px;border-radius:999px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:30;white-space:nowrap}
+.toast.show{opacity:1}
+.empty{text-align:center;padding:30px 10px;color:var(--muted)}
+.empty span{font-size:40px;display:block;margin-bottom:6px}
+</style>
+</head>
+<body>
+<header><div><h1 id="hdrTitle">今日训练</h1><div class="sub" id="hdrSub"></div></div><span class="pill" id="hdrPhase"></span></header>
+<main>
+
+<!-- ===== 今日 ===== -->
+<section class="page active" id="page-today">
+  <div class="card">
+    <div class="week" id="week"></div>
+    <div class="chips" id="typeChips" style="margin-top:10px"></div>
+    <div class="bar" style="margin-top:10px"><i id="prog"></i></div>
+    <div class="stat" style="margin-top:10px">
+      <div><b id="stSets">0/0</b><small>完成组数</small></div>
+      <div><b id="stVol">0</b><small>总容量 kg</small></div>
+      <div><b id="stWeek">0</b><small>本周力量次数</small></div>
+    </div>
+  </div>
+  <div id="exList"></div>
+  <div class="card">
+    <div class="row">
+      <div class="grow"><label class="f">今日体重 kg</label><input type="number" step="0.1" inputmode="decimal" id="dayWeight" placeholder="早上空腹"></div>
+      <div class="grow" style="flex:2"><label class="f">备注</label><input type="text" id="dayNote" placeholder="睡眠、状态、疼痛…"></div>
+    </div>
+    <button class="ok" id="btnFinish" style="width:100%;margin-top:10px">完成训练 ✓</button>
+  </div>
+</section>
+
+<!-- ===== 计划 ===== -->
+<section class="page" id="page-plan">
+  <div class="card">
+    <h2>路线图 · 165cm / 从 68kg 出发</h2>
+    <div class="road" id="road"></div>
+    <p class="muted" style="margin:6px 0 0">目标照片 173cm / 85kg 换算到 165cm 约为 74–76kg、体脂 15%，需要再增加 10kg 以上的纯肌肉，是 3 到 5 年的长期目标。第一年的目标是体重基本不变但成分完全不同。</p>
+  </div>
+  <div class="card">
+    <h2>每周安排</h2>
+    <table>
+      <tr><th>周一</th><td><span class="pill u">上肢 A</span> 上胸 · 背宽 · 肩</td></tr>
+      <tr><th>周二</th><td><span class="pill l">下肢 A</span> 深蹲 · 腘绳 · 腹肌</td></tr>
+      <tr><th>周三</th><td><span class="pill r">轻松跑</span> 25–30 分钟</td></tr>
+      <tr><th>周四</th><td><span class="pill u">上肢 B</span> 胸中部 · 背厚 · 肩</td></tr>
+      <tr><th>周五</th><td><span class="pill l">下肢 B</span> 腿举 · 单腿 · 腹肌</td></tr>
+      <tr><th>周六</th><td><span class="pill r">轻松跑</span> 减脂期可改为第 3 次跑</td></tr>
+      <tr><th>周日</th><td><span class="pill x">休息</span> 睡够、吃够</td></tr>
+    </table>
+    <p class="muted" style="margin:8px 0 0">整体平移没问题，但「练腿前一天不跑步」，两次上肢训练之间至少隔两天。在「今日」页可以手动改当天类型。</p>
+  </div>
+  <div class="card">
+    <h2>训练原则</h2>
+    <ul>
+      <li><b>渐进超负荷</b>：每组填重量和次数。同样重量做到区间上限，下次加 1–2.5kg（上肢）或 2.5–5kg（下肢）。</li>
+      <li><b>留 1–2 次余力</b>：每组做到还能再做 1–2 次就停，每个动作最后一组可以做到力竭。</li>
+      <li><b>组间休息</b>：复合动作 2–3 分钟，小肌群 60–90 秒。点勾一组会自动开始计时。</li>
+      <li><b>前 8 周</b>以学动作为主。点动作缩略图看动画和要点，用手机录下来对比。</li>
+      <li><b>方形胸肌</b> = 上斜推 + 肩宽 + 低体脂；<b>腹肌</b> = 负重卷腹的厚度 + 减脂期露出来。</li>
+      <li>每 4 周同光线同姿势拍对比照；每 8–10 周安排一周减量（重量减 30%）。</li>
+      <li>某个器械没有就点动作详情，里面有替代动作，可以一键替换。</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h2>关于跑步</h2>
+    <ul>
+      <li><b>现在的减脂期</b>：隔天 5 公里可以保留，它正好帮你制造热量缺口。但把它放在非练腿日，配速放慢到能说话。</li>
+      <li><b>进入增肌期后</b>：减到每周 2 次，每次 25–30 分钟，放在周三、周六。</li>
+      <li>跑步日热量 +300 大卡，优先加碳水。</li>
+      <li>力量和跑步同一天时，先力量后跑步，最好隔 6 小时。</li>
+    </ul>
+  </div>
+  <div id="planDetail"></div>
+  <p class="attr muted" style="text-align:center;font-size:11px">动作动画与缩略图 © Gym visual — https://gymvisual.com/ ；动作数据来自 hasaneyldrm/exercises-dataset (MIT)</p>
+</section>
+
+<!-- ===== 饮食 ===== -->
+<section class="page" id="page-diet">
+  <div class="card">
+    <h2>我的参数</h2>
+    <div class="row">
+      <div class="grow"><label class="f">当前体重 kg</label><input type="number" step="0.1" inputmode="decimal" id="sWeight"></div>
+      <div class="grow"><label class="f">年龄</label><input type="number" inputmode="numeric" id="sAge"></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <div class="grow"><label class="f">当前阶段</label>
+        <select id="sPhase">
+          <option value="cut">阶段 1 · 减脂 + 学动作（−400）</option>
+          <option value="bulk">阶段 2 · 精瘦增肌（+250）</option>
+          <option value="cut2">阶段 3 · 减脂收尾（−400）</option>
+          <option value="maintain">维持</option>
+        </select></div>
+      <div class="grow"><label class="f">每周跑步次数</label>
+        <select id="sRuns"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>每日目标</h2>
+    <div class="macro">
+      <div><b id="mKcal">--</b><small>大卡</small></div>
+      <div><b id="mPro">--</b><small>蛋白 g</small></div>
+      <div><b id="mCarb">--</b><small>碳水 g</small></div>
+      <div><b id="mFat">--</b><small>脂肪 g</small></div>
+    </div>
+    <p class="muted" id="mNote" style="margin:10px 0 0"></p>
+  </div>
+  <div class="card">
+    <h2>体重目标</h2>
+    <table id="weightTargets"></table>
+  </div>
+  <div class="card">
+    <h2>一日饮食模板 · 减脂期约 2050 大卡</h2>
+    <table>
+      <tr><th>早餐</th><td>鸡蛋 3 个（2 个全蛋 + 1 个蛋白）+ 燕麦 50g + 牛奶 250ml</td></tr>
+      <tr><th>午餐</th><td>米饭 1 碗 + 鸡胸 / 瘦牛肉 / 鱼 150g + 蔬菜 250g，少油</td></tr>
+      <tr><th>练前 1h</th><td>香蕉 1 根或面包 1 片（跑步日或训练日才加）</td></tr>
+      <tr><th>练后</th><td>乳清蛋白 1 勺 + 牛奶或水</td></tr>
+      <tr><th>晚餐</th><td>米饭 2/3 碗 + 肉类 150g + 蔬菜 + 豆腐 100g</td></tr>
+      <tr><th>睡前</th><td>希腊酸奶 150g 或 鸡蛋白 2 个（补足蛋白缺口）</td></tr>
+    </table>
+    <h3 style="margin-top:12px">增肌期怎么改</h3>
+    <ul>
+      <li>主食每餐加三分之一，早餐燕麦加到 70g，练后加一根香蕉或一片面包。</li>
+      <li>蛋白质量不变，总热量加到计算出的目标。</li>
+    </ul>
+    <h3 style="margin-top:12px">通用规则</h3>
+    <ul>
+      <li>每餐一份手掌大小的蛋白质，蛋白总量是第一优先级。</li>
+      <li>饮料、奶茶、油炸基本砍掉，这是最容易省下的热量。</li>
+      <li>每天喝水 2.5L 以上；肌酸每天 5g，安全有效，可选。</li>
+      <li>周末可以有一顿自由餐，但不要变成一整天。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== 记录 ===== -->
+<section class="page" id="page-log">
+  <div class="card">
+    <h2>最近 8 周打卡</h2>
+    <div class="cal" id="cal"></div>
+    <div class="row" style="margin-top:8px"><span class="pill u">上肢</span><span class="pill l">下肢</span><span class="pill r">跑步</span><span class="pill x">休息</span></div>
+  </div>
+  <div class="card">
+    <h2>体重趋势 · 90 天</h2>
+    <svg class="chart" id="chart" viewBox="0 0 340 150" preserveAspectRatio="none"></svg>
+    <div class="stat" style="margin-top:8px">
+      <div><b id="w7">--</b><small>近 7 天平均</small></div>
+      <div><b id="wDelta">--</b><small>较上周</small></div>
+      <div><b id="wMonth">--</b><small>较 30 天前</small></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>力量进步 · 估算 1RM</h2>
+    <table id="progress"></table>
+    <p class="muted" style="margin:8px 0 0">估算 1RM = 重量 × (1 + 次数 ÷ 30)，取每次训练最好的一组。数字往上走就说明在进步。</p>
+  </div>
+  <div class="card">
+    <h2>最近备注</h2>
+    <div id="notes" class="muted"></div>
+  </div>
+  <div class="card">
+    <h2>设置与备份</h2>
+    <div class="row" style="margin-bottom:8px">
+      <label class="row grow" style="gap:8px"><input type="checkbox" id="optTimer" style="width:auto"> 勾选一组后自动开始休息计时</label>
+    </div>
+    <div class="row" style="margin-bottom:8px">
+      <label class="row grow" style="gap:8px"><input type="checkbox" id="optSound" style="width:auto"> 计时结束提示音</label>
+    </div>
+    <p class="muted">数据只存在这台手机的浏览器里。换手机或清缓存前先导出。</p>
+    <div class="row">
+      <button class="ghost grow" id="btnExport">导出 JSON</button>
+      <button class="ghost grow" id="btnImport">导入 JSON</button>
+      <input type="file" id="fileImport" accept="application/json" style="display:none">
+    </div>
+    <button class="ghost" id="btnReset" style="width:100%;margin-top:8px;color:var(--danger)">清空全部数据</button>
+  </div>
+</section>
+</main>
+
+<div class="timer" id="timer">
+  <div><b id="tLeft">1:30</b><small id="tName">休息</small></div>
+  <div class="bar"><i id="tBar" style="background:var(--accent)"></i></div>
+  <button class="sm ghost" id="tPlus">+30s</button>
+  <button class="sm" id="tSkip">跳过</button>
+</div>
+
+<nav>
+  <button data-page="today" class="active"><span>🏋️</span>今日</button>
+  <button data-page="plan"><span>📋</span>计划</button>
+  <button data-page="diet"><span>🍚</span>饮食</button>
+  <button data-page="log"><span>📈</span>记录</button>
+</nav>
+
+<div class="sheet" id="sheet"><div class="panel" id="sheetPanel"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const EXDB = {"0314": {"id": "0314", "zh": "上斜哑铃卧推", "en": "dumbbell incline bench press", "target": "pectorals", "secondary": ["shoulders", "triceps"], "equipment": "dumbbell", "steps": ["设置一个 45 度角的上斜凳。", "坐在长凳上，双脚平放在地上，背部紧贴长凳。", "双手各握一个哑铃，掌心向前，将哑铃举至肩高。", "慢慢地将哑铃降低到胸部两侧，保持肘部呈 90 度角。", "将哑铃推回起始位置，充分伸展手臂。", "重复所需的重复次数。"], "tips": ["靠背调到 30 度左右，超过 45 度会变成练肩前束", "肩胛骨后收下沉，整个动作保持胸口挺起", "哑铃下放到胸上部两侧，肘部与躯干约 45 度", "推起时想象把两只哑铃往中间挤，顶点不要碰铃", "下放 2 秒，推起 1 秒，底部不要弹"], "mistakes": ["肘部完全打开成 90 度，肩关节压力大", "推到顶点耸肩、肩胛离开靠背", "重量太大导致两只哑铃路径不一致"], "alt": ["1299", "0047"], "why": "上胸饱满是「方形胸肌」的核心，上胸有厚度胸型才不会下垂。", "rest": 150, "gif": "media/0314.gif", "img": "media/0314.jpg"}, "0652": {"id": "0652", "zh": "引体向上", "en": "pull-up", "target": "lats", "secondary": ["biceps", "forearms"], "equipment": "body weight", "steps": ["悬挂在引体向上杆上，手掌背向自己，手臂完全伸展。", "启动你的核心并将肩胛骨挤压在一起。", "弯曲肘部并将胸部拉向杠铃杆，将身体向上拉向杠铃杆。", "在动作的最高点暂停，然后慢慢降低身体回到起始位置。", "重复所需的重复次数。"], "tips": ["握距比肩略宽，正手", "启动时先把肩胛往下压，再弯肘拉起", "胸口朝向单杠，拉到下巴过杠", "下放到手臂完全伸直再做下一次", "做不到 5 个就用辅助器或弹力带，做到 4×10 再换负重"], "mistakes": ["半程动作，底部不伸直", "借腿蹬和身体摆动", "用手臂硬拽而不是背部发力"], "alt": ["0017", "0198"], "why": "背阔肌宽度决定上身「倒三角」轮廓，是目标体型的基础。", "rest": 150, "gif": "media/0652.gif", "img": "media/0652.jpg"}, "0426": {"id": "0426", "zh": "哑铃站姿推举", "en": "dumbbell standing overhead press", "target": "delts", "secondary": ["triceps", "upper back"], "equipment": "dumbbell", "steps": ["双脚分开与肩同宽站立，双手各握一个哑铃，与肩同高，手掌朝前。", "向上推哑铃，直到手臂完全伸过头顶。", "在顶部停顿片刻，然后慢慢将哑铃放回至肩部水平。", "重复所需的重复次数。"], "tips": ["核心收紧，不要借腰往后仰", "哑铃从耳朵高度推到头顶正上方", "顶点时手臂伸直，哑铃轻碰", "下放到耳侧即可，不用太低", "新手可以坐姿做，更稳"], "mistakes": ["腰椎过度后仰", "推到前方而不是正上方", "重量太大做成半程"], "alt": ["0091"], "why": "肩膀的整体体积，和侧平举配合把肩练宽练圆。", "rest": 120, "gif": "media/0426.gif", "img": "media/0426.jpg"}, "0861": {"id": "0861", "zh": "坐姿绳索划船", "en": "cable seated row", "target": "upper back", "secondary": ["biceps", "forearms"], "equipment": "cable", "steps": ["坐在电缆划船机上，双脚平放在脚踏板上，膝盖稍微弯曲。", "正手握住手柄，保持背部挺直，肩膀放松。", "将手柄拉向身体，将肩胛骨挤压在一起。", "在动作的最高点暂停片刻，然后慢慢松开手柄回到起始位置。", "重复所需的重复次数。"], "tips": ["膝盖微弯，背挺直，躯干基本不动", "拉到肚脐上方，肘贴身往后", "顶点肩胛完全夹紧，停 1 秒", "回放时肩胛充分前伸，感受拉伸", "全程是背在动，不是腰"], "mistakes": ["躯干大幅前后摇晃", "耸肩，斜方肌代偿", "拉的时候手腕弯曲"], "alt": ["0292", "1350"], "why": "背部厚度和体态，让肩膀往后打开，站姿更挺。", "rest": 90, "gif": "media/0861.gif", "img": "media/0861.jpg"}, "0334": {"id": "0334", "zh": "哑铃侧平举", "en": "dumbbell lateral raise", "target": "delts", "secondary": ["traps"], "equipment": "dumbbell", "steps": ["双脚分开与肩同宽站立，双手各握一个哑铃，手掌朝向身体。", "保持背部挺直并启动核心肌群。", "将手臂向两侧抬起，直到与地板平行，保持肘部稍微弯曲。", "在顶部暂停片刻，然后慢慢将手臂放回起始位置。", "重复所需的重复次数。"], "tips": ["肘微弯固定，手臂像一个整体", "往两侧抬到与肩平，小指略高于拇指", "顶点停半秒，下放 2 秒", "重量宁轻勿重，12 到 20 次", "最后一组可以做到力竭"], "mistakes": ["耸肩，斜方肌代偿", "借身体摆动甩起来", "举过肩高，肩峰撞击"], "alt": ["0178", "0355"], "why": "三角肌中束决定肩宽，每周 8 组以上是目标体型最高性价比的投资。", "rest": 60, "gif": "media/0334.gif", "img": "media/0334.jpg"}, "0294": {"id": "0294", "zh": "哑铃二头弯举", "en": "dumbbell biceps curl", "target": "biceps", "secondary": ["forearms"], "equipment": "dumbbell", "steps": ["站直，双手各握一个哑铃，手掌朝前，双臂完全伸展。", "保持上臂静止，呼气并弯举哑铃，同时收缩二头肌。", "继续举重，直到二头肌完全收缩并且哑铃与肩部齐平。", "挤压二头肌时，保持收缩位置短暂停顿。", "吸气并慢慢开始将哑铃放回起始位置。", "重复所需的重复次数。"], "tips": ["上臂固定贴身，只有前臂动", "顶点时手腕略旋外，拇指朝外", "下放 2 到 3 秒，底部完全伸直", "不要借腰往后仰", "两只交替或同时都可以"], "mistakes": ["肘部往前移，变成前束发力", "半程动作，底部不伸直", "摆动身体借力"], "alt": ["0313", "0285"], "why": "手臂围度，目标照片手臂明显比现在粗一圈。", "rest": 60, "gif": "media/0294.gif", "img": "media/0294.jpg"}, "0200": {"id": "0200", "zh": "绳索下压（绳索把手）", "en": "cable pushdown (with rope attachment)", "target": "triceps", "secondary": ["forearms"], "equipment": "cable", "steps": ["将绳索附件连接到缆绳机上的高滑轮上。", "面向机器站立，双脚分开与肩同宽，膝盖稍微弯曲。", "正手握住绳子，手掌相对。", "在整个练习过程中，保持肘部靠近身体两侧，上臂保持静止。", "呼气并伸展肘部将绳子向下推，直到手臂完全伸展。", "暂停片刻，然后吸气，并让肘部弯曲，慢慢回到起始位置。", "重复所需的重复次数。"], "tips": ["肘部贴身固定在身体两侧", "往下压到底时两根绳索往外分开", "底部手臂完全伸直，停 1 秒", "回放到前臂与地面平行即可", "躯干略前倾，但不要压上去"], "mistakes": ["肘部前后晃动", "用体重往下压", "回放太高，肩膀参与"], "alt": ["0241", "0201"], "why": "三头肌占上臂三分之二，手臂粗不粗主要看它。", "rest": 60, "gif": "media/0200.gif", "img": "media/0200.jpg"}, "0043": {"id": "0043", "zh": "杠铃深蹲", "en": "barbell full squat", "target": "glutes", "secondary": ["quadriceps", "hamstrings", "calves", "core"], "equipment": "barbell", "steps": ["站立，双脚分开与肩同宽，脚趾稍微向外。", "将杠铃放在上背部，将其放在斜方肌或三角肌后束上。", "当你开始降低身体时，启动你的核心并保持胸部挺直。", "弯曲膝盖和臀部，向后和向下推臀部，就像坐在椅子上一样。", "放低身体，直到大腿与地面平行或稍低于地面。", "保持膝盖与脚趾对齐，并将重量放在脚后跟上。", "通过脚后跟站起来，伸展臀部和膝盖。", "重复所需的重复次数。"], "tips": ["杠铃放在斜方肌上，双手握紧", "脚比肩略宽，脚尖微外展", "屈髋屈膝同时下蹲，膝盖对着脚尖方向", "蹲到大腿平行地面或更低", "站起时想象把地板蹬开，核心全程收紧"], "mistakes": ["膝盖内扣", "脚跟离地", "腰椎弯曲，低头看地"], "alt": ["0739", "0760"], "why": "全身最大的复合动作，带动整体肌肉量和激素水平。", "rest": 180, "gif": "media/0043.gif", "img": "media/0043.jpg"}, "0085": {"id": "0085", "zh": "罗马尼亚硬拉", "en": "barbell romanian deadlift", "target": "glutes", "secondary": ["hamstrings", "lower back"], "equipment": "barbell", "steps": ["站立，双脚分开与肩同宽，脚趾指向前方。", "正手握住杠铃，双手分开略宽于肩宽。", "弯曲臀部，保持背部挺直，膝盖稍微弯曲。", "将杠铃向地面降低，使其靠近身体。", "当你降低杠铃时，感受腿筋的拉伸。", "一旦感觉到腿筋拉伸，就将臀部向前推并站直。", "在动作的最高点挤压臀部。", "将杠铃放回起始位置，然后重复所需的重复次数。"], "tips": ["站直，杠铃贴着大腿", "屈髋把屁股往后推，膝盖只微弯", "杠铃沿着腿往下滑，到膝盖下方感觉腘绳肌拉紧", "背全程平直，视线看前下方", "起身时臀部往前顶"], "mistakes": ["变成蹲，膝盖弯太多", "背部弓起", "杠铃离身体太远"], "alt": ["1459"], "why": "腘绳肌和臀部，背面线条和整体围度。", "rest": 150, "gif": "media/0085.gif", "img": "media/0085.jpg"}, "0739": {"id": "0739", "zh": "腿举机（45 度）", "en": "sled 45° leg press", "target": "glutes", "secondary": ["quadriceps", "hamstrings", "calves"], "equipment": "sled machine", "steps": ["将雪橇机的座椅和脚踏板调整到舒适的位置。", "坐在雪橇机上，背部靠在靠背上，双脚与肩同宽放在踏板上。", "握住座椅两侧的把手以保持稳定性。", "伸展双腿，将脚踏板推离身体，脚后跟保持在脚踏板上。", "继续推动，直到双腿几乎完全伸展，但不要锁住膝盖。", "在动作的最高点暂停片刻，然后弯曲膝盖，慢慢地将踏板放回到身体的方向。", "重复所需的重复次数。"], "tips": ["脚放在踏板中间偏上，与肩同宽", "下放到膝盖约 90 度或更低，但臀部不能离座", "推起时不要锁死膝盖", "全程脚跟贴踏板", "腰紧贴靠背"], "mistakes": ["下放太深导致腰离开靠背", "膝盖锁死", "脚放太低膝盖压力大"], "alt": ["0043", "2287"], "why": "大重量刺激股四头肌，比深蹲更容易练到力竭。", "rest": 150, "gif": "media/0739.gif", "img": "media/0739.jpg"}, "0586": {"id": "0586", "zh": "俯卧腿弯举", "en": "lever lying leg curl", "target": "hamstrings", "secondary": ["calves"], "equipment": "leverage machine", "steps": ["调整机器以适合您的身体并选择所需的重量。", "面朝下躺在机器上，双腿伸直，脚跟靠在带衬垫的杠杆上。", "抓住机器的手柄或侧面以保持稳定性。", "保持上半身静止，呼气并尽可能向上弯曲双腿，但不要将臀部抬离垫子。", "挤压腿筋时，保持收缩位置短暂停顿。", "吸气并缓慢地将控制杆降低回起始位置。", "重复所需的重复次数。"], "tips": ["脚踝垫在滚轴下方", "髋部紧贴垫子，不要抬起", "弯举到脚跟接近臀部", "下放 2 到 3 秒控制", "脚尖勾起更容易发力"], "mistakes": ["臀部抬起借力", "放得太快", "半程"], "alt": ["0599"], "why": "腘绳肌围度，大腿后侧饱满。", "rest": 90, "gif": "media/0586.gif", "img": "media/0586.jpg"}, "0175": {"id": "0175", "zh": "跪姿绳索卷腹", "en": "cable kneeling crunch", "target": "abs", "secondary": ["obliques"], "equipment": "cable", "steps": ["将绳索手柄连接到高滑轮上，然后面向远离机器的方向跪下。", "双手握住绳柄，将其放在脑后，肘部向两侧伸出。", "保持臀部不动，弯曲腰部并将躯干向大腿方向挤压。", "在底部停顿片刻，然后慢慢回到起始位置。", "重复所需的重复次数。"], "tips": ["绳索拉到额头两侧固定", "髋部固定，只有脊柱在卷", "卷腹时想象肋骨贴向骨盆", "顶点停 1 秒，感受腹肌挤压", "像练别的肌肉一样逐步加重"], "mistakes": ["用手臂往下拉", "髋部跟着往后坐", "幅度太大变成下腰"], "alt": ["0832", "0212"], "why": "腹直肌的厚度，腹肌「块」够厚减脂后才明显。", "rest": 60, "gif": "media/0175.gif", "img": "media/0175.jpg"}, "0472": {"id": "0472", "zh": "悬垂举腿", "en": "hanging leg raise", "target": "abs", "secondary": ["hip flexors"], "equipment": "body weight", "steps": ["悬挂在引体向上杆上，双臂完全伸展，手掌背向自己。", "启动你的核心并将双腿抬起到你面前，保持伸直。", "继续抬起，直到双腿与地面平行或达到您可以舒适地达到的高度。", "在顶部暂停片刻，然后慢慢将双腿放回起始位置。", "重复所需的重复次数。"], "tips": ["抓单杠，身体不要晃", "膝盖屈曲往上抬，重点是骨盆往上翻", "顶点膝盖高于髋部", "下放时控制，不要荡", "能做 15 次再换直腿"], "mistakes": ["身体前后摆动", "只抬腿不卷骨盆", "下放太快"], "alt": ["0620", "2963"], "why": "下腹部，让腹肌从上到下完整。", "rest": 60, "gif": "media/0472.gif", "img": "media/0472.jpg"}, "0025": {"id": "0025", "zh": "杠铃平板卧推", "en": "barbell bench press", "target": "pectorals", "secondary": ["triceps", "shoulders"], "equipment": "barbell", "steps": ["平躺在长凳上，双脚平放在地上，背部紧贴长凳。", "正手握住杠铃，握距略宽于肩宽。", "将杠铃从架子上提起，并将其直接放在胸部上方，双臂完全伸展。", "将杠铃慢慢降低到胸部，保持肘部内收。", "当杠铃触及胸部时暂停片刻。", "伸展双臂，将杠铃推回到起始位置。", "重复所需的重复次数。"], "tips": ["肩胛后收下沉，整个背部像压在凳子上", "握距比肩略宽，手腕正直", "杠铃下放到乳头下方，肘部约 45 度", "轻触胸口，不要弹起", "脚踩实地面，臀部不离凳"], "mistakes": ["肘部完全外展 90 度", "臀部离凳", "杠铃在胸口弹"], "alt": ["0577", "0289"], "why": "胸肌整体厚度和推力的基础动作。", "rest": 180, "gif": "media/0025.gif", "img": "media/0025.jpg"}, "0198": {"id": "0198", "zh": "宽握高位下拉", "en": "cable pulldown", "target": "lats", "secondary": ["biceps", "forearms"], "equipment": "cable", "steps": ["调整拉索下拉机，使座椅处于舒适的高度并固定护膝。", "坐在座位上，背部挺直，双脚平放在地面上。", "正手握住电缆杆，握距略宽于肩宽。", "稍微向后倾斜并启动你的核心。", "将电缆杆向下拉向胸部，将肩胛骨挤压在一起。", "在动作底部暂停片刻，然后慢慢松开杠铃回到起始位置。", "重复所需的重复次数。"], "tips": ["握距宽于肩，正手", "躯干略后仰 10 到 15 度，固定", "肩胛先下沉，再把杠拉到锁骨", "肘部往身体两侧下方走", "回放时手臂完全伸直"], "mistakes": ["拉到脖子后面", "躯干大幅后仰", "手臂主导"], "alt": ["0652", "0197"], "why": "背阔肌宽度的补充，比引体更容易控制重量和次数。", "rest": 90, "gif": "media/0198.gif", "img": "media/0198.jpg"}, "0319": {"id": "0319", "zh": "上斜哑铃飞鸟", "en": "dumbbell incline fly", "target": "pectorals", "secondary": ["shoulders"], "equipment": "dumbbell", "steps": ["将上斜凳设置为 45 度角。", "坐在长凳上，双手各握一个哑铃，手掌相对。", "仰卧在长凳上，将哑铃推至起始位置，位于胸部正上方。", "将哑铃以宽弧线向两侧放低，直到感觉到胸部有拉伸感。", "暂停片刻，然后挤压胸部肌肉，将哑铃拉回起始位置。", "重复所需的重复次数。"], "tips": ["靠背 30 度，肘微弯固定", "手臂画大弧线往两侧打开", "底部感受胸肌拉伸，停 1 秒", "合拢时想象用上臂夹东西", "重量轻，次数多"], "mistakes": ["肘弯太多变成卧推", "放太低拉伤肩", "顶点哑铃互碰丢失张力"], "alt": ["0171", "0308"], "why": "上胸的拉伸位刺激，补上胸内侧和线条。", "rest": 60, "gif": "media/0319.gif", "img": "media/0319.jpg"}, "0292": {"id": "0292", "zh": "单臂哑铃划船", "en": "dumbbell one arm bent-over row", "target": "upper back", "secondary": ["biceps", "forearms"], "equipment": "dumbbell", "steps": ["双脚分开与肩同宽站立，一手握住哑铃，手掌朝向身体。", "稍微弯曲膝盖，髋部向前转动，保持背部挺直，核心肌群参与。", "让哑铃垂直垂向地板，手臂完全伸展。", "将哑铃向上拉向胸部，保持肘部靠近身体并将肩胛骨挤压在一起。", "在顶部停顿片刻，然后慢慢将哑铃放回起始位置。", "重复所需的重复次数，然后换边。"], "tips": ["一手一膝撑凳，背平直", "哑铃从下方拉向髋部", "肘部贴身，顶点肩胛夹紧", "下放时手臂完全伸直", "躯干不要旋转"], "mistakes": ["躯干扭转借力", "拉向胸口而不是髋部", "耸肩"], "alt": ["0293", "0861"], "why": "背部厚度，单侧动作纠正两边不平衡。", "rest": 90, "gif": "media/0292.gif", "img": "media/0292.jpg"}, "0233": {"id": "0233", "zh": "面拉（绳索）", "en": "cable standing rear delt row (with rope)", "target": "delts", "secondary": ["trapezius", "rhomboids", "biceps"], "equipment": "cable", "steps": ["面向缆绳机站立，双脚与肩同宽。", "用双手握住电缆附件，手掌相对，然后后退以在电缆中产生张力。", "保持背部挺直，核心肌群参与。", "将电缆拉向您的身体，将肩胛骨挤压在一起。", "在运动的最高点停顿片刻，然后慢慢松开绳索回到起始位置。", "重复所需的重复次数。"], "tips": ["绳索调到脸的高度", "两手握绳往脸的方向拉，肘高于手", "顶点时两手分开到耳朵两侧", "肩胛夹紧，停 1 秒", "重量轻，15 到 20 次"], "mistakes": ["肘部低于手", "躯干后仰借力", "重量太大"], "alt": ["0203", "0380"], "why": "后束和肩袖，体态和肩部健康，圆肩的人尤其需要。", "rest": 60, "gif": "media/0233.gif", "img": "media/0233.jpg"}, "0313": {"id": "0313", "zh": "锤式弯举", "en": "dumbbell hammer curl", "target": "biceps", "secondary": ["forearms"], "equipment": "dumbbell", "steps": ["站直，双手各持一个哑铃，手掌朝向躯干。", "保持肘部靠近躯干，并旋转手掌，直到手掌朝前。", "这将是您的起始位置。", "现在，保持上臂静止，呼气并卷曲哑铃，同时收缩二头肌。", "继续举重，直到二头肌完全收缩并且哑铃与肩部齐平。", "挤压二头肌时，保持收缩位置短暂停顿。", "然后，吸气并慢慢开始将哑铃放回起始位置。", "重复建议的重复次数。"], "tips": ["掌心相对，像握锤子", "上臂固定，只弯前臂", "顶点停 1 秒", "下放 2 秒，底部伸直", "可以交替做"], "mistakes": ["肘往前移", "摆动身体", "半程"], "alt": ["0294", "0298"], "why": "肱桡肌和二头外侧，前臂和手臂的整体围度。", "rest": 60, "gif": "media/0313.gif", "img": "media/0313.jpg"}, "0251": {"id": "0251", "zh": "双杠臂屈伸（胸）", "en": "chest dip", "target": "pectorals", "secondary": ["triceps", "shoulders"], "equipment": "body weight", "steps": ["将自己置于双杠上，双臂完全伸展，身体伸直。", "弯曲肘部，降低身体，直到肩膀低于肘部。", "伸直手臂，将自己推回起始位置。", "重复所需的重复次数。"], "tips": ["身体略前倾，膝盖屈曲", "下放到上臂与地面平行", "肘部向外约 45 度", "推起时不用完全锁死", "做不到 8 个用辅助器或弹力带"], "mistakes": ["放太深肩前侧刺痛", "身体完全直立变成三头主导", "耸肩"], "alt": ["0009", "1719"], "why": "胸下沿和三头的复合动作，让胸肌下缘轮廓清晰。", "rest": 120, "gif": "media/0251.gif", "img": "media/0251.jpg"}, "0410": {"id": "0410", "zh": "保加利亚分腿蹲", "en": "dumbbell single leg split squat", "target": "quads", "secondary": ["glutes", "hamstrings", "calves"], "equipment": "dumbbell", "steps": ["双脚分开与肩同宽站立，每只手各握一个哑铃。", "一只脚向前迈出一步，调整双脚的位置，使前脚平放在地面上，后脚抬高在长凳或台阶上。", "弯曲前膝盖和臀部，降低身体，保持后膝盖稍微弯曲，后脚跟离开地面。", "继续降低，直到大腿前部与地面平行，然后通过前脚跟推回到起始位置。", "重复所需的重复次数，然后换腿并重复。"], "tips": ["后脚放在凳上，前脚往前一大步", "躯干略前倾，前腿下蹲到大腿平行", "膝盖对着脚尖", "前脚整个脚掌发力站起", "先做弱侧"], "mistakes": ["前脚离凳太近膝盖超脚尖太多", "躯干左右晃", "后腿发力"], "alt": ["2368", "1460"], "why": "单腿力量和臀部，纠正两腿不平衡，臀腿线条。", "rest": 90, "gif": "media/0410.gif", "img": "media/0410.jpg"}, "0585": {"id": "0585", "zh": "腿屈伸", "en": "lever leg extension", "target": "quads", "secondary": ["hamstrings"], "equipment": "leverage machine", "steps": ["调整机器的座椅高度和靠背以适合您的身体。", "坐在机器上，背部靠在靠背上，双脚放在脚垫上。", "抓住手柄或侧杆以保持稳定性。", "伸直膝盖，举起重物，向前伸展双腿。", "在顶部暂停片刻，然后慢慢将重量放回起始位置。", "重复所需的重复次数。"], "tips": ["靠背调到膝盖对准机器转轴", "抬到腿完全伸直，顶点停 1 秒", "下放 2 到 3 秒", "脚尖勾起", "不要借臀部往上顶"], "mistakes": ["放得太快", "臀部离座", "幅度不完整"], "alt": ["3007"], "why": "股四头肌的分离度和「泪滴」形状。", "rest": 60, "gif": "media/0585.gif", "img": "media/0585.jpg"}, "0605": {"id": "0605", "zh": "站姿提踵", "en": "lever standing calf raise", "target": "calves", "secondary": ["soleus", "ankle stabilizers"], "equipment": "leverage machine", "steps": ["将机器调整到您的高度，双脚分开与肩同宽站立。", "将肩膀放在护垫下方，并握住手柄以保持稳定。", "伸展脚踝，将脚后跟尽可能抬高。", "在顶部停顿片刻，然后慢慢降低脚后跟回到起始位置。", "重复所需的重复次数。"], "tips": ["前脚掌踩在踏板边缘", "底部脚跟下沉到最低，停 1 秒拉伸", "顶点踮到最高，停 1 秒", "全程慢，不要弹", "膝盖伸直"], "mistakes": ["弹跳式快速做", "幅度太小", "膝盖弯曲借力"], "alt": ["0417", "1373"], "why": "小腿，整体比例协调。", "rest": 60, "gif": "media/0605.gif", "img": "media/0605.jpg"}, "0832": {"id": "0832", "zh": "负重卷腹", "en": "weighted crunch", "target": "abs", "secondary": ["obliques"], "equipment": "weighted", "steps": ["平躺，膝盖弯曲，双脚平放在地上。", "将杠铃片或哑铃放在胸前。", "收紧腹肌，将上半身抬离地面，向前卷曲，直到肩胛骨离开地面。", "在顶部停顿片刻，然后慢慢将上半身放回起始位置。", "重复所需的重复次数。"], "tips": ["仰卧屈膝，杠铃片抱在胸前", "卷起时肩胛离地即可，腰不离地", "顶点停 1 秒挤压腹肌", "下放 2 秒", "渐进加重量，而不是加次数"], "mistakes": ["用脖子带动", "整个背离地变成仰卧起坐", "放太快"], "alt": ["0175", "0277"], "why": "腹直肌上部厚度，减脂后腹肌线条是否明显靠它。", "rest": 60, "gif": "media/0832.gif", "img": "media/0832.jpg"}, "2135": {"id": "2135", "zh": "平板支撑（可负重）", "en": "weighted front plank", "target": "abs", "secondary": ["shoulders", "lower back"], "equipment": "weighted", "steps": ["首先脸朝下躺在地板上。", "将前臂放在地面上，肘部直接位于肩膀下方。", "将双腿伸直在身后，脚趾着地。", "启动你的核心并将你的身体抬离地面，用前臂和脚趾保持平衡。", "保持身体从头部到脚跟呈一条直线。", "保持此位置所需的时间。", "将身体放低至起始位置。", "重复所需的重复次数。"], "tips": ["肘在肩正下方", "臀部夹紧，骨盆后倾，腰不塌", "从头到脚一条直线", "呼吸正常，不要憋气", "45 秒轻松后背上加片"], "mistakes": ["塌腰", "屁股翘起", "头往下掉"], "alt": ["0464"], "why": "核心稳定，深蹲硬拉的基础。", "rest": 60, "gif": "media/2135.gif", "img": "media/2135.jpg"}, "0684": {"id": "0684", "zh": "轻松跑", "en": "run (equipment)", "target": "cardiovascular system", "secondary": ["quadriceps", "hamstrings", "calves"], "equipment": "body weight", "steps": ["首先站直，双脚分开与臀部同宽。", "启动你的核心并保持上半身放松。", "开始原地慢跑，将膝盖抬向胸部，然后轻轻落在脚掌上。", "保持稳定的步伐并继续慢跑所需的时间或距离。", "记住在整个练习过程中深呼吸并保持良好的姿势。"], "tips": ["配速以能完整说一句话为准", "25 到 30 分钟，不追求距离", "增肌期每周 2 次，减脂期每周 3 到 4 次", "不要放在练腿前一天", "跑步日额外吃 300 大卡碳水"], "mistakes": ["跑太快变成高强度，影响第二天训练", "和练腿日挨着", "跑完不补充"], "alt": [], "why": "心肺和习惯，减脂期制造热量缺口。", "rest": 0, "gif": "media/0684.gif", "img": "media/0684.jpg"}, "1299": {"id": "1299", "zh": "上斜推胸机", "en": "lever incline chest press", "target": "pectorals", "secondary": ["shoulders", "triceps"], "equipment": "leverage machine", "steps": ["将杠杆机的座椅和靠背调整到舒适的位置。", "坐在机器上，背部靠在靠背上，双脚平放在地板上。", "正手握住手柄，双手之间的距离略大于肩宽。", "向前推动手柄并使其远离身体，直到双臂完全伸展。", "暂停片刻，然后慢慢弯曲肘部，将手柄放回到胸部。", "重复所需的重复次数。"], "tips": ["座位调到把手在胸上部高度", "肩胛后收", "推到手臂伸直但不锁死", "慢放"], "mistakes": ["座位太低变成练肩"], "alt": ["0314"], "why": "新手替代上斜哑铃卧推，更稳。", "rest": 120, "gif": "media/1299.gif", "img": "media/1299.jpg"}, "0047": {"id": "0047", "zh": "上斜杠铃卧推", "en": "barbell incline bench press", "target": "pectorals", "secondary": ["shoulders", "triceps"], "equipment": "barbell", "steps": ["设置一个 45 度角的上斜凳。", "躺在长凳上，双脚平放在地上。", "正手握住杠铃，握距略宽于肩宽。", "松开杠铃并将其缓慢降低至胸部，保持肘部呈 45 度角。", "在底部停顿片刻，然后将杠铃推回到起始位置。", "重复所需的重复次数。"], "tips": ["靠背 30 度", "杠铃下放到锁骨下方", "肘 45 度"], "mistakes": ["弹起", "臀部离凳"], "alt": ["0314"], "why": "上斜哑铃的替代，可以上更大重量。", "rest": 150, "gif": "media/0047.gif", "img": "media/0047.jpg"}, "0017": {"id": "0017", "zh": "辅助引体向上", "en": "assisted pull-up", "target": "lats", "secondary": ["biceps", "forearms"], "equipment": "leverage machine", "steps": ["将机器调整至您所需的体重和高度设置。", "正手握住手柄，握距略宽于肩宽。", "双臂完全伸展，双脚离开地面。", "收紧背部肌肉，将身体拉向手柄，保持肘部靠近身体。", "继续拉，直到下巴位于手柄上方。", "在顶部停顿片刻，然后慢慢将身体放回起始位置。", "重复所需的重复次数。"], "tips": ["辅助重量越小越难", "肩胛先下沉", "拉到下巴过杠", "每周减少辅助重量"], "mistakes": ["膝盖往下压借力"], "alt": ["0652"], "why": "做不到标准引体时的替代。", "rest": 120, "gif": "media/0017.gif", "img": "media/0017.jpg"}, "0577": {"id": "0577", "zh": "坐姿推胸机", "en": "lever chest press", "target": "pectorals", "secondary": ["triceps", "shoulders"], "equipment": "leverage machine", "steps": ["调整座椅高度，将自己放在机器上，背部平放在垫子上。", "正手握住手柄，肘部呈 90 度角。", "向前推动手柄，直到手臂完全伸展，运动过程中呼气。", "动作结束时短暂暂停，然后慢慢回到起始位置，同时吸气。", "重复所需的重复次数。"], "tips": ["把手在胸口高度", "肩胛后收", "不要锁死"], "mistakes": ["耸肩"], "alt": ["0025"], "why": "杠铃卧推的替代，适合没有保护的时候。", "rest": 120, "gif": "media/0577.gif", "img": "media/0577.jpg"}, "0009": {"id": "0009", "zh": "辅助双杠臂屈伸", "en": "assisted chest dip (kneeling)", "target": "pectorals", "secondary": ["triceps", "shoulders"], "equipment": "leverage machine", "steps": ["将机器调整到您想要的高度，并将膝盖固定在垫子上。", "手掌朝下，抓住手柄，双臂完全伸展。", "弯曲肘部降低身体，直到上臂与地板平行。", "暂停片刻，然后将自己推回到起始位置。", "重复所需的重复次数。"], "tips": ["身体前倾练胸", "下放到上臂平行地面"], "mistakes": ["放太深"], "alt": ["0251"], "why": "做不到双杠时的替代。", "rest": 90, "gif": "media/0009.gif", "img": "media/0009.jpg"}, "0289": {"id": "0289", "zh": "平板哑铃卧推", "en": "dumbbell bench press", "target": "pectorals", "secondary": ["triceps", "shoulders"], "equipment": "dumbbell", "steps": ["平躺在长凳上，双脚平放在地上，背部紧贴长凳。", "双手各握一个哑铃，手掌朝前，双臂伸至胸部上方。", "慢慢地将哑铃降低到胸部两侧，保持肘部呈 90 度角。", "暂停片刻，然后将哑铃推回起始位置，完全伸展双臂。", "重复所需的重复次数。"], "tips": ["肩胛后收", "哑铃下放到胸两侧", "顶点不碰铃"], "mistakes": ["肘 90 度外展"], "alt": ["0025"], "why": "杠铃卧推的替代，活动幅度更大。", "rest": 150, "gif": "media/0289.gif", "img": "media/0289.jpg"}, "0293": {"id": "0293", "zh": "哑铃俯身划船", "en": "dumbbell bent over row", "target": "upper back", "secondary": ["biceps", "forearms"], "equipment": "dumbbell", "steps": ["双脚分开与肩同宽站立，膝盖稍微弯曲，双手各握一个哑铃，手掌朝向身体。", "臀部向前弯曲，保持背部挺直，核心肌群参与。", "让你的手臂垂直垂向地板，肘部稍微弯曲。", "将哑铃拉向胸部，将肩胛骨挤压在一起。", "在顶部停顿片刻，然后慢慢将哑铃放回起始位置。", "重复所需的重复次数。"], "tips": ["背平直", "拉向髋部", "肩胛夹紧"], "mistakes": ["躯干起伏"], "alt": ["0292"], "why": "单臂划船的双侧版本。", "rest": 90, "gif": "media/0293.gif", "img": "media/0293.jpg"}, "0620": {"id": "0620", "zh": "平凳仰卧举腿", "en": "lying leg raise flat bench", "target": "abs", "secondary": ["hip flexors"], "equipment": "body weight", "steps": ["平躺在平坦的长凳上，背部紧贴长凳。", "将双手放在臀部下方以获得支撑。", "保持双腿伸直并拢，然后将它们抬向天花板。", "在顶部暂停片刻，然后慢慢将双腿放回起始位置。", "重复所需的重复次数。"], "tips": ["腰贴凳", "骨盆上翻"], "mistakes": ["下放时腰离凳"], "alt": ["0472"], "why": "悬垂举腿做不到时的替代。", "rest": 60, "gif": "media/0620.gif", "img": "media/0620.jpg"}, "0599": {"id": "0599", "zh": "坐姿腿弯举", "en": "lever seated leg curl", "target": "hamstrings", "secondary": ["calves"], "equipment": "leverage machine", "steps": ["调整机器以适合您的身体，然后坐在机器上，背部靠在靠背上。", "将小腿放在带衬垫的杠杆下方，就在脚踝上方。", "抓住机器两侧的手柄以提供支撑。", "保持大腿不动，呼气并尽可能向上弯曲双腿。", "挤压腿筋时，保持收缩位置短暂停顿。", "吸气并缓慢地将控制杆降低回起始位置。", "重复所需的重复次数。"], "tips": ["大腿压实", "慢放"], "mistakes": ["臀部抬起"], "alt": ["0586"], "why": "俯卧腿弯举的替代。", "rest": 90, "gif": "media/0599.gif", "img": "media/0599.jpg"}, "1459": {"id": "1459", "zh": "哑铃罗马尼亚硬拉", "en": "dumbbell romanian deadlift", "target": "glutes", "secondary": ["hamstrings", "lower back"], "equipment": "dumbbell", "steps": ["双脚分开与肩同宽站立，双手各握一个哑铃，正握。", "保持背部挺直，核心收紧，以臀部为铰链，将哑铃向地面降低，让膝盖稍微弯曲。", "降低哑铃，直到感觉到腿筋拉伸，然后推动脚后跟并收紧臀肌，回到起始位置。", "重复所需的重复次数。"], "tips": ["哑铃贴腿", "屈髋"], "mistakes": ["背弓"], "alt": ["0085"], "why": "杠铃 RDL 的替代。", "rest": 120, "gif": "media/1459.gif", "img": "media/1459.jpg"}, "2368": {"id": "2368", "zh": "徒手分腿蹲", "en": "split squats", "target": "quads", "secondary": ["glutes", "hamstrings", "calves"], "equipment": "body weight", "steps": ["双脚分开与肩同宽站立。", "一只脚向前迈出一步，并将其放在另一只脚前面约两英尺处。", "弯曲膝盖和臀部，降低身体，保持背部挺直。", "继续降低，直到前大腿与地面平行，后膝盖悬停在地面上方。", "暂停片刻，然后推动前脚跟回到起始位置。", "重复所需的重复次数，然后换腿并重复。"], "tips": ["前腿发力"], "mistakes": ["躯干晃"], "alt": ["0410"], "why": "保加利亚分腿蹲的入门版。", "rest": 60, "gif": "media/2368.gif", "img": "media/2368.jpg"}};
+const PLANS = [{"key": "upperA", "name": "上肢 A", "sub": "上胸 · 背宽 · 肩", "cls": "u", "ex": [{"id": "0314", "sets": 4, "reps": "6–10", "key": "upperA"}, {"id": "0652", "sets": 4, "reps": "6–10", "key": "upperA"}, {"id": "0426", "sets": 3, "reps": "8–12", "key": "upperA"}, {"id": "0861", "sets": 3, "reps": "8–12", "key": "upperA"}, {"id": "0334", "sets": 4, "reps": "12–20", "key": "upperA"}, {"id": "0294", "sets": 3, "reps": "8–12", "key": "upperA"}, {"id": "0200", "sets": 3, "reps": "10–15", "key": "upperA"}]}, {"key": "lowerA", "name": "下肢 A", "sub": "深蹲 · 腘绳 · 腹肌", "cls": "l", "ex": [{"id": "0043", "sets": 4, "reps": "6–10", "key": "lowerA"}, {"id": "0085", "sets": 3, "reps": "8–10", "key": "lowerA"}, {"id": "0739", "sets": 3, "reps": "10–12", "key": "lowerA"}, {"id": "0586", "sets": 3, "reps": "10–15", "key": "lowerA"}, {"id": "0175", "sets": 3, "reps": "10–15", "key": "lowerA"}, {"id": "0472", "sets": 3, "reps": "10–15", "key": "lowerA"}]}, {"key": "upperB", "name": "上肢 B", "sub": "胸中部 · 背厚 · 肩", "cls": "u", "ex": [{"id": "0025", "sets": 4, "reps": "6–10", "key": "upperB"}, {"id": "0198", "sets": 4, "reps": "8–12", "key": "upperB"}, {"id": "0319", "sets": 3, "reps": "10–15", "key": "upperB"}, {"id": "0292", "sets": 3, "reps": "8–12", "key": "upperB"}, {"id": "0334", "sets": 4, "reps": "12–20", "key": "upperB"}, {"id": "0233", "sets": 3, "reps": "15–20", "key": "upperB"}, {"id": "0313", "sets": 3, "reps": "10–12", "key": "upperB"}, {"id": "0251", "sets": 3, "reps": "8–12", "key": "upperB"}]}, {"key": "lowerB", "name": "下肢 B", "sub": "腿举 · 单腿 · 腹肌", "cls": "l", "ex": [{"id": "0739", "sets": 4, "reps": "8–12", "key": "lowerB"}, {"id": "0410", "sets": 3, "reps": "8–10 / 侧", "key": "lowerB"}, {"id": "0585", "sets": 3, "reps": "12–15", "key": "lowerB"}, {"id": "0586", "sets": 3, "reps": "10–15", "key": "lowerB"}, {"id": "0605", "sets": 3, "reps": "12–15", "key": "lowerB"}, {"id": "0832", "sets": 3, "reps": "10–15", "key": "lowerB"}, {"id": "2135", "sets": 3, "reps": "45–60 秒", "key": "lowerB"}]}, {"key": "run", "name": "轻松跑", "sub": "25–30 分钟", "cls": "r", "ex": [{"id": "0684", "sets": 1, "reps": "25–30 分钟", "key": "run"}]}, {"key": "rest", "name": "休息", "sub": "睡够 · 吃够", "cls": "x", "ex": []}];
+const PLAN = Object.fromEntries(PLANS.map(p=>[p.key,p]));
+const WEEK = ['rest','upperA','lowerA','run','upperB','lowerB','run']; // 周日=0
+
+// ---------- 存储 ----------
+const KEY='fitplan_v2';
+const DEF=()=>({settings:{weight:68,age:25,phase:'cut',runs:3,timer:true,sound:true},workouts:{},weights:{}});
+let DB=load();
+function load(){
+  let d=DEF();
+  try{ const v=JSON.parse(localStorage.getItem(KEY)||'null'); if(v){ d=Object.assign(d,v); d.settings=Object.assign(DEF().settings,v.settings||{}); } 
+       else { const v1=JSON.parse(localStorage.getItem('fitplan_v1')||'null'); if(v1){ d.weights=v1.weights||{}; if(v1.settings&&v1.settings.weight) d.settings.weight=v1.settings.weight; } } }catch(e){}
+  return d;
+}
+function save(){ localStorage.setItem(KEY,JSON.stringify(DB)); }
+const $=id=>document.getElementById(id);
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1600); }
+function vib(ms){ try{ navigator.vibrate&&navigator.vibrate(ms); }catch(e){} }
+
+// ---------- 日期 ----------
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const TODAY=iso(new Date());
+let CUR=TODAY;
+function addDays(s,n){ const d=new Date(s+'T00:00:00'); d.setDate(d.getDate()+n); return iso(d); }
+function dow(s){ return new Date(s+'T00:00:00').getDay(); }
+function monday(s){ const w=dow(s); return addDays(s,-(w===0?6:w-1)); }
+const CN='日一二三四五六';
+
+// ---------- 记录模型 ----------
+function rec(d){ if(!DB.workouts[d]) DB.workouts[d]={type:WEEK[dow(d)],ex:{},note:'',finished:false}; return DB.workouts[d]; }
+function lastSession(exId,before){
+  const ds=Object.keys(DB.workouts).filter(d=>d<before).sort().reverse();
+  for(const d of ds){ const e=DB.workouts[d].ex[exId]; if(e&&e.sets&&e.sets.some(s=>s.w||s.r)) return {d,sets:e.sets}; }
+  return null;
+}
+function ensureSets(r,ex,n){
+  if(!r.ex[ex.id]) r.ex[ex.id]={sets:[]};
+  const e=r.ex[ex.id];
+  if(e.sets.length===0){
+    const last=lastSession(ex.id,CUR);
+    for(let i=0;i<n;i++){ const ls=last&&last.sets[i]||last&&last.sets[last.sets.length-1]||{}; e.sets.push({w:ls.w||'',r:ls.r||'',done:false}); }
+  }
+  return e;
+}
+function planExercises(r){ // 当天的动作列表（含替换）
+  const p=PLAN[r.type]; r.swap=r.swap||{};
+  return p.ex.map(x=>{ const id=r.swap[x.id]||x.id; return Object.assign({},x,{id,orig:x.id,db:EXDB[id]}); });
+}
+
+// ---------- 今日页 ----------
+function renderToday(){
+  const r=rec(CUR); const p=PLAN[r.type];
+  $('hdrTitle').textContent=CUR===TODAY?'今日训练':'补记 '+CUR.slice(5);
+  $('hdrSub').textContent=`${CUR} 周${CN[dow(CUR)]} · ${p.name} ${p.sub}`;
+  // 周条
+  const wk=$('week'); wk.innerHTML='';
+  const mon=monday(CUR);
+  const nl=document.createElement('div'); nl.className='nav'; nl.textContent='‹'; nl.onclick=()=>{CUR=addDays(CUR,-7);renderToday();}; wk.appendChild(nl);
+  for(let i=0;i<7;i++){
+    const d=addDays(mon,i); const rr=DB.workouts[d]; const type=rr?rr.type:WEEK[dow(d)];
+    const div=document.createElement('div'); div.className='d '+PLAN[type].cls+(rr&&rr.finished?' done':'')+(d===CUR?' cur':'')+(d>TODAY?' future':'');
+    div.innerHTML=`<small>${'一二三四五六日'[i]}</small><b>${parseInt(d.slice(8))}</b><span class="dot"></span>`;
+    div.onclick=()=>{ if(d>TODAY){toast('还没到这天');return;} CUR=d; renderToday(); };
+    wk.appendChild(div);
+  }
+  const nr=document.createElement('div'); nr.className='nav'; nr.textContent='›'; nr.onclick=()=>{ if(addDays(mon,7)>TODAY){CUR=TODAY;}else CUR=addDays(CUR,7); renderToday(); }; wk.appendChild(nr);
+  // 类型 chips
+  const ch=$('typeChips'); ch.innerHTML='';
+  PLANS.forEach(pp=>{ const c=document.createElement('div'); c.className='chip'+(pp.key===r.type?' on':''); c.textContent=pp.name+(WEEK[dow(CUR)]===pp.key?' ·计划':''); c.onclick=()=>{ r.type=pp.key; save(); renderToday(); }; ch.appendChild(c); });
+  // 动作
+  const list=$('exList'); list.innerHTML='';
+  let total=0,done=0,vol=0;
+  if(p.ex.length===0){ list.innerHTML='<div class="card empty"><span>😴</span>休息日<br><small>睡够 7–8 小时，蛋白吃够，散步或拉伸 20 分钟都可以</small></div>'; }
+  planExercises(r).forEach(x=>{
+    const e=ensureSets(r,x,x.sets); const db=x.db;
+    const allDone=e.sets.length>0&&e.sets.every(s=>s.done);
+    e.sets.forEach(s=>{ total++; if(s.done){done++; vol+=(parseFloat(s.w)||0)*(parseFloat(s.r)||0);} });
+    const last=lastSession(x.id,CUR);
+    const card=document.createElement('div'); card.className='ex'+(allDone?' done':'');
+    card.innerHTML=`<div class="head">
+        <img class="thumb" src="${db.img}" alt="" loading="lazy">
+        <div class="t"><b>${db.zh}</b><small>${db.en}</small>
+          <div class="meta"><span class="pill">${x.sets} 组 × ${x.reps}</span>${db.rest?`<span class="pill">休 ${db.rest}s</span>`:''}${x.id!==x.orig?'<span class="pill warn">已替换</span>':''}</div></div>
+        <div class="more">›</div></div>
+      <div class="sets"></div>`;
+    card.querySelector('.head').onclick=()=>openSheet(x.id,{swapFor:x.orig});
+    const sets=card.querySelector('.sets');
+    const isTime=/秒|分钟/.test(x.reps);
+    e.sets.forEach((s,i)=>{
+      const row=document.createElement('div'); row.className='set'+(s.done?' done':'');
+      row.innerHTML=`<div class="n">${i+1}</div>
+        <div class="pm" data-d="-1">−</div><input type="number" step="0.5" inputmode="decimal" placeholder="${x.key==='run'?'km':'kg'}" value="${s.w}" data-f="w">
+        <div class="pm" data-d="1">+</div><input type="number" inputmode="numeric" placeholder="${isTime?'秒/分':'次'}" value="${s.r}" data-f="r">
+        <div class="chk">${s.done?'✓':''}</div>`;
+      row.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{ s[inp.dataset.f]=inp.value; save(); }));
+      row.querySelectorAll('.pm').forEach(b=>b.onclick=()=>{ const step=db.rest>=150?2.5:1; const v=(parseFloat(s.w)||0)+step*parseInt(b.dataset.d); s.w=Math.max(0,Math.round(v*2)/2); row.querySelector('[data-f=w]').value=s.w; save(); });
+      row.querySelector('.chk').onclick=()=>{
+        s.done=!s.done; if(s.done){ s.w=row.querySelector('[data-f=w]').value; s.r=row.querySelector('[data-f=r]').value; vib(30); if(DB.settings.timer&&db.rest&&CUR===TODAY) startTimer(db.rest,db.zh); } else stopTimer();
+        save(); renderToday(); };
+      sets.appendChild(row);
+    });
+    const foot=document.createElement('div'); foot.className='foot';
+    foot.innerHTML=`<span class="last">${last?`上次 ${last.d.slice(5)}：${last.sets.filter(s=>s.w||s.r).map(s=>`${s.w||'-'}×${s.r||'-'}`).join(' / ')}`:'第一次做，先用能标准完成 10 次的重量'}</span>
+      <span><button class="sm ghost" data-a="del">− 组</button> <button class="sm ghost" data-a="add">+ 组</button></span>`;
+    foot.querySelector('[data-a=add]').onclick=()=>{ const l=e.sets[e.sets.length-1]||{}; e.sets.push({w:l.w||'',r:l.r||'',done:false}); save(); renderToday(); };
+    foot.querySelector('[data-a=del]').onclick=()=>{ if(e.sets.length>1){ e.sets.pop(); save(); renderToday(); } };
+    sets.appendChild(foot);
+    list.appendChild(card);
+  });
+  $('prog').style.width=(total?done/total*100:0)+'%';
+  $('stSets').textContent=`${done}/${total}`; $('stVol').textContent=Math.round(vol).toLocaleString();
+  $('stWeek').textContent=weekCount(CUR);
+  $('dayWeight').value=DB.weights[CUR]||''; $('dayNote').value=r.note||'';
+  $('btnFinish').textContent=r.finished?'已完成 ✓  点击取消':'完成训练 ✓';
+  $('btnFinish').className=r.finished?'ghost':'ok';
+  $('hdrPhase').textContent={cut:'阶段 1 减脂',bulk:'阶段 2 增肌',cut2:'阶段 3 减脂',maintain:'维持'}[DB.settings.phase]||'';
+  $('hdrPhase').className='pill '+(DB.settings.phase==='bulk'?'u':'r');
+}
+function weekCount(d){ const m=monday(d); let c=0; for(let i=0;i<7;i++){ const r=DB.workouts[addDays(m,i)]; if(r&&r.finished&&/upper|lower/.test(r.type)) c++; } return c; }
+$('dayWeight').addEventListener('input',e=>{ const v=parseFloat(e.target.value); if(v>0){ DB.weights[CUR]=v; if(CUR===TODAY){ DB.settings.weight=v; } } else delete DB.weights[CUR]; save(); });
+$('dayNote').addEventListener('input',e=>{ rec(CUR).note=e.target.value; save(); });
+$('btnFinish').onclick=()=>{ const r=rec(CUR); r.finished=!r.finished;
+  if(r.finished){ planExercises(r).forEach(x=>{ const e=ensureSets(r,x,x.sets); e.sets.forEach(s=>{ if(s.w||s.r) s.done=true; }); }); vib([30,50,30]); }
+  save(); stopTimer(); renderToday();
+  if(r.finished){ const v=$('stVol').textContent; toast(r.type==='run'?'跑完了，记得补 300 大卡碳水':r.type==='rest'?'休息日打卡 ✓':`练完了，总容量 ${v} kg，吃够蛋白早点睡`); } };
+
+// ---------- 休息计时 ----------
+let T={left:0,total:0,h:null};
+function startTimer(sec,name){ stopTimer(); T.left=sec; T.total=sec; $('tName').textContent=name+' · 休息'; tick(); $('timer').classList.add('show'); T.h=setInterval(tick,1000); }
+function tick(){ $('tLeft').textContent=`${Math.floor(T.left/60)}:${pad(T.left%60)}`; $('tBar').style.width=(T.left/T.total*100)+'%';
+  if(T.left<=0){ stopTimer(); vib([100,80,100]); if(DB.settings.sound) beep(); toast('休息结束，下一组'); return; } T.left--; }
+function stopTimer(){ clearInterval(T.h); T.h=null; $('timer').classList.remove('show'); }
+$('tPlus').onclick=()=>{ T.left+=30; T.total+=30; tick(); };
+$('tSkip').onclick=stopTimer;
+function beep(){ try{ const c=new (window.AudioContext||window.webkitAudioContext)(); [0,0.18].forEach(t=>{ const o=c.createOscillator(),g=c.createGain(); o.frequency.value=880; o.connect(g); g.connect(c.destination); g.gain.setValueAtTime(.25,c.currentTime+t); g.gain.exponentialRampToValueAtTime(.001,c.currentTime+t+.15); o.start(c.currentTime+t); o.stop(c.currentTime+t+.16); }); }catch(e){} }
+
+// ---------- 详情抽屉 ----------
+function openSheet(id,opt){
+  opt=opt||{}; const db=EXDB[id]; if(!db) return;
+  const alts=(db.alt||[]).filter(a=>EXDB[a]);
+  $('sheetPanel').innerHTML=`<div class="grab"></div>
+    <img class="gif" src="${db.gif}" alt="${db.en}">
+    <h2>${db.zh}</h2><div class="en">${db.en}</div>
+    <div class="row"><span class="pill">主要 · ${db.target}</span>${db.secondary.map(s=>`<span class="pill">${s}</span>`).join('')}<span class="pill">器械 · ${db.equipment}</span>${db.rest?`<span class="pill">组间休息 ${db.rest}s</span>`:''}</div>
+    <h4>为什么练它</h4><div>${db.why}</div>
+    <h4>动作步骤</h4><ol>${db.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+    <h4>教练要点</h4><ul>${db.tips.map(s=>`<li>${s}</li>`).join('')}</ul>
+    <h4>常见错误</h4><ul>${db.mistakes.map(s=>`<li>${s}</li>`).join('')}</ul>
+    ${alts.length?`<h4>替代动作（点击查看）</h4><div class="alt">${alts.map(a=>`<div data-alt="${a}"><img src="${EXDB[a].img}" loading="lazy">${EXDB[a].zh}</div>`).join('')}</div>`:''}
+    ${opt.swapFor&&opt.swapFor!==id?`<button style="width:100%;margin-top:14px" id="btnSwap">今天用「${db.zh}」替换「${EXDB[opt.swapFor].zh}」</button>`:''}
+    ${opt.swapFor&&opt.swapFor===id&&rec(CUR).swap&&rec(CUR).swap[id]?`<button class="ghost" style="width:100%;margin-top:14px" id="btnUnswap">恢复原动作</button>`:''}
+    <div class="attr">© Gym visual — gymvisual.com</div>`;
+  $('sheetPanel').querySelectorAll('[data-alt]').forEach(el=>el.onclick=()=>openSheet(el.dataset.alt,opt));
+  const sw=$('btnSwap'); if(sw) sw.onclick=()=>{ const r=rec(CUR); r.swap=r.swap||{}; r.swap[opt.swapFor]=id; delete r.ex[opt.swapFor]; save(); closeSheet(); renderToday(); toast('已替换'); };
+  const us=$('btnUnswap'); if(us) us.onclick=()=>{ const r=rec(CUR); delete r.swap[id]; save(); closeSheet(); renderToday(); };
+  $('sheet').classList.add('show'); $('sheetPanel').scrollTop=0;
+}
+function closeSheet(){ $('sheet').classList.remove('show'); }
+$('sheet').addEventListener('click',e=>{ if(e.target===$('sheet')) closeSheet(); });
+
+// ---------- 计划页 ----------
+function renderPlan(){
+  const w=parseFloat(DB.settings.weight)||68, ph=DB.settings.phase;
+  const p1=[Math.round(w-5),Math.round(w-6)], p2=[Math.round(w+1),Math.round(w+2)], p3=[Math.round(w-2),Math.round(w-1)];
+  $('road').innerHTML=[
+    ['cut',`阶段 1 · 减脂 + 学动作 · 12–16 周`,`${w}kg → 约 ${p1[1]}–${p1[0]}kg，体脂 24% → 17%。热量 −400，蛋白 2.2g/kg。新手期在热量缺口下也能长肌肉。跑步保持每周 3 次。`],
+    ['bulk',`阶段 2 · 精瘦增肌 · 8–10 个月`,`${p1[0]}kg → 约 ${p2[0]}–${p2[1]}kg，每月 +0.5–0.8kg。热量 +250。跑步减到每周 2 次。肩、手臂、上胸会明显变化。`],
+    ['cut2',`阶段 3 · 减脂收尾 · 8–10 周`,`→ 约 ${p3[0]}–${p3[1]}kg，体脂 13–15%。腹肌线条在这个阶段出现。体重和出发时差不多，但身材完全不同。`],
+    ['long',`长期 · 增肌减脂循环 · 第 2–5 年`,`每年净增 2–3kg 肌肉，逐步走向 74–76kg / 15%，即目标照片在 165cm 的版本。`],
+  ].map(([k,t,s])=>`<div class="ph${ph===k?' on':''}"><b>${t}</b><small>${s}</small></div>`).join('');
+  const box=$('planDetail'); box.innerHTML='';
+  PLANS.filter(p=>p.ex.length).forEach(p=>{
+    const c=document.createElement('div'); c.className='card';
+    c.innerHTML=`<h2><span class="pill ${p.cls}">${p.name}</span> &nbsp;${p.sub}</h2>`+p.ex.map(x=>{ const d=EXDB[x.id]; return `<div class="lib" data-id="${x.id}"><img src="${d.img}" loading="lazy"><div><b>${d.zh}</b><small>${d.why}</small></div><span class="r">${x.sets}×${x.reps}</span></div>`; }).join('');
+    c.querySelectorAll('.lib').forEach(el=>el.onclick=()=>openSheet(el.dataset.id));
+    box.appendChild(c);
+  });
+}
+
+// ---------- 饮食页 ----------
+function renderDiet(){
+  const s=DB.settings;
+  $('sWeight').value=s.weight||''; $('sAge').value=s.age||''; $('sPhase').value=s.phase||'cut'; $('sRuns').value=s.runs??3;
+  const w=parseFloat(s.weight), age=parseInt(s.age)||25;
+  if(!(w>0)){ ['mKcal','mPro','mCarb','mFat'].forEach(i=>$(i).textContent='--'); return; }
+  const bmr=10*w+6.25*165-5*age+5;
+  const runs=parseInt(s.runs)||0;
+  const tdee=bmr*1.45+runs*350/7;
+  const cut=s.phase==='cut'||s.phase==='cut2';
+  const adj={cut:-400,cut2:-400,bulk:250,maintain:0}[s.phase]||0;
+  const kcal=Math.round((tdee+adj)/10)*10;
+  const pro=Math.round(w*(cut?2.2:2.0)), fat=Math.round(w*(cut?0.8:1.0));
+  const carb=Math.max(0,Math.round((kcal-pro*4-fat*9)/4));
+  $('mKcal').textContent=kcal; $('mPro').textContent=pro; $('mCarb').textContent=carb; $('mFat').textContent=fat;
+  $('mNote').textContent=`基础代谢约 ${Math.round(bmr)} 大卡，日常消耗约 ${Math.round(tdee)} 大卡（含每周 ${runs} 次跑步）。按这个吃两周，看周平均体重：减脂期每周应掉 0.4–0.6kg，增肌期每月涨 0.5–0.8kg，不对就每次调 100–150 大卡。跑步日再 +300 大卡碳水。`;
+  const rows=[
+    ['现在',`${w.toFixed(1)} kg`,'从照片估计体脂 22–26%，BMI 25'],
+    ['阶段 1 终点',`${Math.round(w-6)}–${Math.round(w-5)} kg`,'体脂约 17%，肚子基本平，腹肌轮廓隐约可见'],
+    ['阶段 2 终点',`${Math.round(w+1)}–${Math.round(w+2)} kg`,'体脂约 19–20%，肩和手臂明显变大，肚子略回来，正常'],
+    ['阶段 3 终点',`${Math.round(w-2)}–${Math.round(w-1)} kg`,'体脂 13–15%，腹肌清晰，这是第一年的终点'],
+    ['长期目标','74–76 kg','体脂 15%，目标照片换算到 165cm 的体重，3–5 年'],
+  ];
+  $('weightTargets').innerHTML=rows.map(r=>`<tr><th>${r[0]}</th><td><b>${r[1]}</b><br><span class="muted">${r[2]}</span></td></tr>`).join('');
+}
+['sWeight','sAge','sPhase','sRuns'].forEach(id=>$(id).addEventListener('input',e=>{ DB.settings[id.slice(1).toLowerCase()]=e.target.value; save(); renderDiet(); renderPlan(); renderToday(); }));
+
+// ---------- 记录页 ----------
+function e1rm(sets){ let b=0; sets.forEach(s=>{ const w=parseFloat(s.w),r=parseFloat(s.r); if(w>0&&r>0){ b=Math.max(b,w*(1+r/30)); } }); return b; }
+function renderLog(){
+  const cal=$('cal'); cal.innerHTML='';
+  '一二三四五六日'.split('').forEach(h=>{const d=document.createElement('div');d.className='h';d.textContent=h;cal.appendChild(d);});
+  const start=addDays(monday(TODAY),-49);
+  for(let i=0;i<56;i++){ const d=addDays(start,i); const r=DB.workouts[d]; const div=document.createElement('div'); div.className='d';
+    if(r&&r.finished) div.classList.add(PLAN[r.type].cls); if(d===TODAY) div.classList.add('today'); div.textContent=parseInt(d.slice(8)); if(d>TODAY) div.style.opacity=.3;
+    div.onclick=()=>{ if(d<=TODAY){ CUR=d; go('today'); } }; cal.appendChild(div); }
+  const dates=Object.keys(DB.weights).sort().filter(d=>d>=addDays(TODAY,-90));
+  const svg=$('chart'); svg.innerHTML='';
+  if(dates.length>=2){
+    const vals=dates.map(d=>DB.weights[d]); const min=Math.min(...vals)-0.5,max=Math.max(...vals)+0.5;
+    const t0=new Date(dates[0]).getTime(), t1=new Date(dates[dates.length-1]).getTime();
+    const x=d=>10+(new Date(d).getTime()-t0)/Math.max(1,(t1-t0))*320, y=v=>130-(v-min)/(max-min)*110;
+    const path=dates.map((d,i)=>(i?'L':'M')+x(d).toFixed(1)+','+y(DB.weights[d]).toFixed(1)).join(' ');
+    // 7 日均线
+    const avgp=dates.map((d,i)=>{ const win=dates.slice(Math.max(0,i-6),i+1); return (i?'L':'M')+x(d).toFixed(1)+','+y(win.reduce((s,k)=>s+DB.weights[k],0)/win.length).toFixed(1); }).join(' ');
+    svg.innerHTML=`<path d="${path}" fill="none" stroke="#3a4a7a" stroke-width="1.5"/><path d="${avgp}" fill="none" stroke="#5b8dff" stroke-width="2.5"/>`+
+      dates.map(d=>`<circle cx="${x(d)}" cy="${y(DB.weights[d])}" r="2.2" fill="#8fb0ff"/>`).join('')+
+      `<text x="2" y="12" fill="#8d93a1" font-size="10">${max.toFixed(1)}</text><text x="2" y="142" fill="#8d93a1" font-size="10">${min.toFixed(1)}</text>`;
+  } else svg.innerHTML='<text x="170" y="80" fill="#8d93a1" font-size="12" text-anchor="middle">记录 2 天以上体重后显示趋势</text>';
+  const avg=(a,b)=>{const ds=Object.keys(DB.weights).filter(d=>d>=a&&d<=b);return ds.length?ds.reduce((s,d)=>s+DB.weights[d],0)/ds.length:NaN;};
+  const w7=avg(addDays(TODAY,-6),TODAY),wp=avg(addDays(TODAY,-13),addDays(TODAY,-7)),wm=avg(addDays(TODAY,-36),addDays(TODAY,-30));
+  const f=(v,sign)=>isNaN(v)?'--':(sign&&v>0?'+':'')+v.toFixed(1);
+  $('w7').textContent=f(w7); $('wDelta').textContent=f(w7-wp,true); $('wMonth').textContent=f(w7-wm,true);
+  // 力量进步
+  const key=['0314','0025','0652','0198','0043','0085','0739','0426','0334'];
+  const rows=key.map(id=>{
+    const sess=Object.keys(DB.workouts).sort().filter(d=>DB.workouts[d].ex[id]&&e1rm(DB.workouts[d].ex[id].sets)>0);
+    if(!sess.length) return '';
+    const now=e1rm(DB.workouts[sess[sess.length-1]].ex[id].sets);
+    const oldD=sess.filter(d=>d<=addDays(TODAY,-28)); const first=e1rm(DB.workouts[sess[0]].ex[id].sets);
+    const old=oldD.length?e1rm(DB.workouts[oldD[oldD.length-1]].ex[id].sets):null;
+    return `<tr><th>${EXDB[id].zh}</th><td>${first.toFixed(0)}</td><td>${old!==null?old.toFixed(0):'--'}</td><td><b>${now.toFixed(0)}</b> <span class="muted">${sess.length} 次</span></td></tr>`;
+  }).join('');
+  $('progress').innerHTML=rows?`<tr><th></th><th>第一次</th><th>4 周前</th><th>最近</th></tr>${rows}`:'<tr><td class="muted">填了重量和次数后这里会显示进步</td></tr>';
+  const notes=Object.keys(DB.workouts).filter(d=>DB.workouts[d].note).sort().reverse().slice(0,10);
+  $('notes').innerHTML=notes.length?notes.map(d=>`<div style="margin-bottom:6px"><b style="color:var(--text)">${d.slice(5)}</b> ${PLAN[DB.workouts[d].type].name} · ${DB.workouts[d].note}</div>`).join(''):'还没有备注';
+  $('optTimer').checked=!!DB.settings.timer; $('optSound').checked=!!DB.settings.sound;
+}
+$('optTimer').onchange=e=>{ DB.settings.timer=e.target.checked; save(); };
+$('optSound').onchange=e=>{ DB.settings.sound=e.target.checked; save(); };
+$('btnExport').onclick=()=>{ const a=document.createElement('a'); a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(DB,null,2)); a.download=`fitplan-${TODAY}.json`; a.click(); };
+$('btnImport').onclick=()=>$('fileImport').click();
+$('fileImport').onchange=e=>{ const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=()=>{ try{ const d=JSON.parse(r.result); if(!d.workouts) throw 0; DB=Object.assign(DEF(),d); save(); renderAll(); toast('导入成功'); }catch(_){ toast('文件格式不对'); } }; r.readAsText(f); e.target.value=''; };
+$('btnReset').onclick=()=>{ if(confirm('确定清空全部打卡和体重记录？建议先导出。')){ localStorage.removeItem(KEY); localStorage.removeItem('fitplan_v1'); DB=load(); renderAll(); } };
+
+// ---------- 导航 ----------
+function go(page){
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===page));
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));
+  const titles={today:'今日训练',plan:'训练计划',diet:'饮食与体重',log:'打卡记录'};
+  if(page!=='today'){ $('hdrTitle').textContent=titles[page]; $('hdrSub').textContent=TODAY; } 
+  if(page==='today') renderToday(); if(page==='log') renderLog(); if(page==='plan') renderPlan(); if(page==='diet') renderDiet();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.page));
+function renderAll(){ renderToday(); renderPlan(); renderDiet(); renderLog(); }
+renderAll();
+</script>
+</body>
+</html>
