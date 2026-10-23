@@ -122,11 +122,13 @@ nav button span{display:block;font-size:22px;line-height:1.2}
 .timer small{color:var(--muted);display:block;font-size:12px}
 .timer .bar{flex:1}
 /* 详情抽屉 */
-.sheet{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;opacity:0;visibility:hidden;transition:opacity .28s ease,visibility 0s .28s}
-.sheet.show{opacity:1;visibility:visible;transition:opacity .28s ease,visibility 0s}
-.sheet .panel{background:var(--bg);width:100%;max-height:85vh;border-radius:22px 22px 0 0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:0 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .36s cubic-bezier(.32,.72,0,1);will-change:transform}
-.sheet.show .panel{transform:translateY(0)}
-.sheet .panel.drag{transition:none}
+.sheet{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;visibility:hidden;transition:visibility 0s .56s}
+.sheet.show{visibility:visible;transition:visibility 0s}
+.sheet .dim{position:absolute;inset:0;background:rgba(0,0,0,.62);opacity:0;transition:opacity .56s cubic-bezier(.4,0,.6,1)}
+.sheet.show .dim{opacity:1;transition:opacity .4s ease-out}
+.sheet .panel{position:relative;background:var(--bg);width:100%;max-height:85vh;border-radius:22px 22px 0 0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:0 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .56s cubic-bezier(.5,.05,.6,1);will-change:transform;box-shadow:0 -12px 40px rgba(0,0,0,.45)}
+.sheet.show .panel{transform:translateY(0);transition:transform .46s cubic-bezier(.32,.72,0,1)}
+.sheet.drag .panel,.sheet.drag .dim{transition:none}
 .sheet .top{position:sticky;top:0;z-index:2;background:var(--bg);display:flex;align-items:center;justify-content:space-between;padding:8px 0 4px}
 .sheet .top .x{width:40px;height:40px;border-radius:50%;background:var(--card2);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:20px}
 body.lock{overflow:hidden;position:fixed;left:0;right:0}
@@ -335,7 +337,7 @@ body.lock{overflow:hidden;position:fixed;left:0;right:0}
   <button data-page="log"><span>📈</span>记录</button>
 </nav>
 
-<div class="sheet" id="sheet"><div class="panel" id="sheetPanel"></div></div>
+<div class="sheet" id="sheet"><div class="dim" id="sheetDim"></div><div class="panel" id="sheetPanel"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -557,26 +559,35 @@ function openSheet(id,opt){
   const us=$('btnUnswap'); if(us) us.onclick=()=>{ const r=rec(CUR); delete r.swap[id]; save(); closeSheet(); renderToday(); };
   const sh=$('sheet'), pn=$('sheetPanel');
   if(!document.body.classList.contains('lock')){ SHEET_Y=window.scrollY; document.body.style.top=-SHEET_Y+'px'; document.body.classList.add('lock'); }
-  pn.scrollTop=0; pn.classList.remove('drag'); pn.style.transform=''; sh.style.backgroundColor='';
+  pn.scrollTop=0; sh.classList.remove('drag'); pn.style.transform=''; pn.style.transition=''; $('sheetDim').style.opacity=''; $('sheetDim').style.transition='';
   if(!sh.classList.contains('show')){ void pn.offsetHeight; sh.classList.add('show'); }
 }
 let SHEET_Y=0;
-function closeSheet(){ const sh=$('sheet'), pn=$('sheetPanel'); pn.classList.remove('drag'); void pn.offsetHeight; pn.style.transform=''; sh.style.backgroundColor=''; sh.classList.remove('show'); document.body.classList.remove('lock'); document.body.style.top=''; window.scrollTo(0,SHEET_Y); }
+function closeSheet(v,d){ const sh=$('sheet'), pn=$('sheetPanel'), dim=$('sheetDim');
+  sh.classList.remove('drag'); void pn.offsetHeight;
+  if(v>0.55){ // 顺着甩动速度继续滑出，再略减速
+    const rem=Math.max(40,pn.offsetHeight-(d||0)); const ms=Math.round(Math.min(480,Math.max(260,rem/v)));
+    pn.style.transition=`transform ${ms}ms cubic-bezier(.2,.55,.4,1)`; dim.style.transition=`opacity ${ms}ms ease-out`;
+  } else if(d>0){ // 拖过阈值松手：从当前位置匀加速落下
+    pn.style.transition='transform .5s cubic-bezier(.45,0,.55,1)'; dim.style.transition='opacity .5s ease-in-out';
+  }
+  pn.style.transform=''; dim.style.opacity=''; sh.classList.remove('show');
+  document.body.classList.remove('lock'); document.body.style.top=''; window.scrollTo(0,SHEET_Y); }
 // 下滑关闭：跟手拖动，松手按位移或速度决定关闭/回弹
 (()=>{ const sh=$('sheet'), pn=$('sheetPanel'); let y0=null,dy=0,t0=0,lastY=0,lastT=0,v=0,active=false;
   pn.addEventListener('touchstart',e=>{ y0=lastY=e.touches[0].clientY; t0=lastT=e.timeStamp; dy=0; v=0; active=false; },{passive:true});
   pn.addEventListener('touchmove',e=>{ if(y0===null) return; const y=e.touches[0].clientY; dy=y-y0;
-    if(!active){ if(pn.scrollTop<=0&&dy>6){ active=true; pn.classList.add('drag'); } else if(dy<0||pn.scrollTop>0){ y0=null; return; } else return; }
+    if(!active){ if(pn.scrollTop<=0&&dy>6){ active=true; sh.classList.add('drag'); } else if(dy<0||pn.scrollTop>0){ y0=null; return; } else return; }
     e.preventDefault();
     const d=Math.max(0,dy); const dt=e.timeStamp-lastT; if(dt>0){ v=(y-lastY)/dt; } lastY=y; lastT=e.timeStamp;
-    pn.style.transform=`translateY(${d}px)`; sh.style.backgroundColor=`rgba(0,0,0,${(0.6*(1-Math.min(1,d/pn.offsetHeight))).toFixed(3)})`;
+    pn.style.transform=`translateY(${d}px)`; $('sheetDim').style.opacity=(1-Math.min(1,d/pn.offsetHeight)).toFixed(3);
   },{passive:false});
   const end=()=>{ if(!active){ y0=null; return; } const d=Math.max(0,dy); const h=pn.offsetHeight;
-    if(d>h*0.28 || v>0.55) closeSheet(); else { pn.classList.remove('drag'); void pn.offsetHeight; pn.style.transform=''; sh.style.backgroundColor=''; }
+    if(d>h*0.28 || v>0.55) closeSheet(v,d); else { sh.classList.remove('drag'); void pn.offsetHeight; pn.style.transform=''; $('sheetDim').style.opacity=''; }
     y0=null; dy=0; v=0; active=false; };
   pn.addEventListener('touchend',end); pn.addEventListener('touchcancel',end);
 })();
-$('sheet').addEventListener('click',e=>{ if(e.target===$('sheet')) closeSheet(); });
+$('sheetDim').addEventListener('click',()=>closeSheet());
 
 // ---------- 计划页 ----------
 function renderPlan(){
