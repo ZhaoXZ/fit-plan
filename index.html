@@ -6,6 +6,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0e1014">
+<meta name="apple-mobile-web-app-title" content="健身">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
 <title>增肌计划</title>
 <style>
 :root{--bg:#0e1014;--card:#171a21;--card2:#1f2330;--line:#272b36;--text:#eceef3;--muted:#8d93a1;--accent:#5b8dff;--accent2:#1f3367;--ok:#39d98a;--ok2:#133a28;--warn:#ffb020;--danger:#ff5d5d;--u:#5b8dff;--l:#b48cff;--r:#39d98a;--x:#ffb020;--radius:16px}
@@ -152,6 +156,7 @@ nav button span{display:block;font-size:22px;line-height:1.2}
       <div><b id="stWeek">0</b><small>本周力量次数</small></div>
     </div>
   </div>
+  <div class="card" id="coach"></div>
   <div id="exList"></div>
   <div class="card">
     <div class="row">
@@ -214,6 +219,7 @@ nav button span{display:block;font-size:22px;line-height:1.2}
     <div class="row">
       <div class="grow"><label class="f">当前体重 kg</label><input type="number" step="0.1" inputmode="decimal" id="sWeight"></div>
       <div class="grow"><label class="f">年龄</label><input type="number" inputmode="numeric" id="sAge"></div>
+      <div class="grow"><label class="f">起点体重 kg</label><input type="number" step="0.1" inputmode="decimal" id="sStartWeight"></div>
     </div>
     <div class="row" style="margin-top:8px">
       <div class="grow"><label class="f">当前阶段</label>
@@ -335,12 +341,13 @@ const WEEK = ['rest','upperA','lowerA','run','upperB','lowerB','run']; // 周日
 
 // ---------- 存储 ----------
 const KEY='fitplan_v2';
-const DEF=()=>({settings:{weight:68,age:25,phase:'cut',runs:3,timer:true,sound:true},workouts:{},weights:{}});
+const DEF=()=>({v:3,settings:{weight:68,startWeight:68,age:31,phase:'cut',phaseStart:'2026-10-23',runs:3,timer:true,sound:true,kcalAdj:0},workouts:{},weights:{}});
 let DB=load();
 function load(){
   let d=DEF();
   try{ const v=JSON.parse(localStorage.getItem(KEY)||'null'); if(v){ d=Object.assign(d,v); d.settings=Object.assign(DEF().settings,v.settings||{}); } 
        else { const v1=JSON.parse(localStorage.getItem('fitplan_v1')||'null'); if(v1){ d.weights=v1.weights||{}; if(v1.settings&&v1.settings.weight) d.settings.weight=v1.settings.weight; } } }catch(e){}
+  if(!(d.v>=3)){ if(String(d.settings.age)==='25') d.settings.age=31; d.settings.startWeight=d.settings.startWeight||68; d.settings.phaseStart=d.settings.phaseStart||'2026-10-23'; d.settings.kcalAdj=d.settings.kcalAdj||0; d.v=3; }
   return d;
 }
 function save(){ localStorage.setItem(KEY,JSON.stringify(DB)); }
@@ -432,7 +439,7 @@ function renderToday(){
       sets.appendChild(row);
     });
     const foot=document.createElement('div'); foot.className='foot';
-    foot.innerHTML=`<span class="last">${last?`上次 ${last.d.slice(5)}：${last.sets.filter(s=>s.w||s.r).map(s=>`${s.w||'-'}×${s.r||'-'}`).join(' / ')}`:'第一次做，先用能标准完成 10 次的重量'}</span>
+    foot.innerHTML=`<span class="last">${last?`上次 ${last.d.slice(5)}：${last.sets.filter(s=>s.w||s.r).map(s=>`${s.w||'-'}×${s.r||'-'}`).join(' / ')}<br>${progressHint(x,last,db)}`:'第一次做，先用能标准完成 10 次的重量'}</span>
       <span><button class="sm ghost" data-a="del">− 组</button> <button class="sm ghost" data-a="add">+ 组</button></span>`;
     foot.querySelector('[data-a=add]').onclick=()=>{ const l=e.sets[e.sets.length-1]||{}; e.sets.push({w:l.w||'',r:l.r||'',done:false}); save(); renderToday(); };
     foot.querySelector('[data-a=del]').onclick=()=>{ if(e.sets.length>1){ e.sets.pop(); save(); renderToday(); } };
@@ -445,9 +452,59 @@ function renderToday(){
   $('dayWeight').value=DB.weights[CUR]||''; $('dayNote').value=r.note||'';
   $('btnFinish').textContent=r.finished?'已完成 ✓  点击取消':'完成训练 ✓';
   $('btnFinish').className=r.finished?'ghost':'ok';
+  renderCoach();
   $('hdrPhase').textContent={cut:'阶段 1 减脂',bulk:'阶段 2 增肌',cut2:'阶段 3 减脂',maintain:'维持'}[DB.settings.phase]||'';
   $('hdrPhase').className='pill '+(DB.settings.phase==='bulk'?'u':'r');
 }
+function progressHint(x,last,db){
+  const m=/(\d+)\s*[–-]\s*(\d+)/.exec(x.reps); if(!m||x.key==='run') return '';
+  const lo=+m[1],hi=+m[2]; const done=last.sets.filter(s=>s.r); if(!done.length) return '';
+  const rs=done.map(s=>parseFloat(s.r)||0); const step=db.rest>=150?2.5:1;
+  if(rs.every(r=>r>=hi)) return `<span style="color:var(--ok)">上次每组都到 ${hi} 次，今天加 ${step}kg</span>`;
+  if(rs.some(r=>r<lo)) return `<span style="color:var(--warn)">上次有组没到 ${lo} 次，保持重量把次数补齐</span>`;
+  return '继续用上次重量，争取每组多做 1 次';
+}
+function avgW(a,b){ const ds=Object.keys(DB.weights).filter(d=>d>=a&&d<=b); return ds.length?{v:ds.reduce((s,d)=>s+DB.weights[d],0)/ds.length,n:ds.length}:{v:NaN,n:0}; }
+function renderCoach(){
+  const s=DB.settings, start=parseFloat(s.startWeight)||68, ph=s.phase;
+  const w7=avgW(addDays(TODAY,-6),TODAY), wp=avgW(addDays(TODAY,-13),addDays(TODAY,-7));
+  const weeks=Math.max(0,Math.round((new Date(TODAY)-new Date(s.phaseStart||TODAY))/6048e5));
+  const goal={cut:[start-6,start-5],bulk:[start+1,start+2],cut2:[start-2,start-1],maintain:[NaN,NaN]}[ph]||[NaN,NaN];
+  const name={cut:'阶段 1 减脂',bulk:'阶段 2 增肌',cut2:'阶段 3 减脂',maintain:'维持'}[ph];
+  let lines=[], action=null;
+  if(ph!=='maintain') lines.push(`${name} 第 ${weeks+1} 周，目标 ${goal[0].toFixed(0)}–${goal[1].toFixed(0)} kg。`);
+  if(w7.n<3){ lines.push('最近 7 天体重记录不足 3 天，先每天早上空腹称一次，建议才准。'); }
+  else {
+    const cur=w7.v; lines.push(`近 7 天平均 ${cur.toFixed(1)} kg。`);
+    const reached=(ph==='cut'||ph==='cut2')?cur<=goal[1]+0.3:ph==='bulk'?cur>=goal[0]-0.3:false;
+    if(reached){
+      if(ph==='cut'){ lines.push('已经到阶段 1 目标，可以进入增肌期：热量 +250，跑步减到每周 2 次。'); action=['进入阶段 2 增肌','bulk',2]; }
+      else if(ph==='bulk'){ lines.push('体重到了增肌期上限，进入减脂收尾，把腹肌练出来。'); action=['进入阶段 3 减脂','cut2',3]; }
+      else { lines.push('第一年的目标达成。保持 4 周后开始下一轮增肌，长期目标 74–76 kg。'); action=['开始新一轮增肌','bulk',2]; }
+    } else if(wp.n>=3){
+      const rate=cur-wp.v; // 周变化
+      if(ph==='cut'||ph==='cut2'){
+        if(rate>-0.25) { lines.push(`过去一周只变化了 ${rate>0?'+':''}${rate.toFixed(1)} kg，减脂期应每周掉 0.4–0.6。建议热量再减 150。`); action=['采纳：热量 −150','adj',-150]; }
+        else if(rate<-0.8){ lines.push(`过去一周掉了 ${(-rate).toFixed(1)} kg，太快会掉肌肉。建议热量加 150。`); action=['采纳：热量 +150','adj',150]; }
+        else lines.push(`过去一周掉了 ${(-rate).toFixed(1)} kg，节奏正好，继续。距目标还有 ${(cur-goal[1]).toFixed(1)} kg。`);
+      } else if(ph==='bulk'){
+        const monthly=rate*4.3;
+        if(monthly<0.3){ lines.push(`按过去一周折算每月涨 ${monthly.toFixed(1)} kg，偏慢。建议热量加 150。`); action=['采纳：热量 +150','adj',150]; }
+        else if(monthly>1.0){ lines.push(`按过去一周折算每月涨 ${monthly.toFixed(1)} kg，偏快，在长脂肪。建议热量减 150。`); action=['采纳：热量 −150','adj',-150]; }
+        else lines.push(`按过去一周折算每月涨 ${monthly.toFixed(1)} kg，节奏正好。`);
+      }
+    } else lines.push('再记一周体重，就能判断热量要不要调。');
+  }
+  let lifts=0; for(let i=0;i<14;i++){ const r=DB.workouts[addDays(TODAY,-i)]; if(r&&r.finished&&/upper|lower/.test(r.type)) lifts++; }
+  if(lifts<6 && Object.keys(DB.workouts).length>7) lines.push(`过去两周只完成 ${lifts} 次力量训练，计划是 8 次。训练不够，饮食再准也没用。`);
+  if(s.kcalAdj) lines.push(`当前热量手动调整 ${s.kcalAdj>0?'+':''}${s.kcalAdj} 大卡（饮食页已计入）。`);
+  $('coach').innerHTML=`<h2>教练建议</h2><div style="font-size:14px">${lines.map(l=>`<div style="margin-bottom:4px">${l}</div>`).join('')}</div>`+(action?`<button class="sm" id="coachBtn" style="margin-top:8px">${action[0]}</button>`:'');
+  const b=$('coachBtn'); if(b) b.onclick=()=>{
+    if(action[1]==='adj'){ DB.settings.kcalAdj=(DB.settings.kcalAdj||0)+action[2]; toast('已调整，饮食页数字已更新'); }
+    else { DB.settings.phase=action[1]; DB.settings.phaseStart=TODAY; DB.settings.runs=action[2]; DB.settings.kcalAdj=0; toast('已切换阶段'); }
+    save(); renderAll(); };
+}
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden && iso(new Date())!==TODAY) location.reload(); });
 function weekCount(d){ const m=monday(d); let c=0; for(let i=0;i<7;i++){ const r=DB.workouts[addDays(m,i)]; if(r&&r.finished&&/upper|lower/.test(r.type)) c++; } return c; }
 $('dayWeight').addEventListener('input',e=>{ const v=parseFloat(e.target.value); if(v>0){ DB.weights[CUR]=v; if(CUR===TODAY){ DB.settings.weight=v; } } else delete DB.weights[CUR]; save(); });
 $('dayNote').addEventListener('input',e=>{ rec(CUR).note=e.target.value; save(); });
@@ -492,7 +549,7 @@ $('sheet').addEventListener('click',e=>{ if(e.target===$('sheet')) closeSheet();
 
 // ---------- 计划页 ----------
 function renderPlan(){
-  const w=parseFloat(DB.settings.weight)||68, ph=DB.settings.phase;
+  const w=parseFloat(DB.settings.startWeight)||68, ph=DB.settings.phase;
   const p1=[Math.round(w-5),Math.round(w-6)], p2=[Math.round(w+1),Math.round(w+2)], p3=[Math.round(w-2),Math.round(w-1)];
   $('road').innerHTML=[
     ['cut',`阶段 1 · 减脂 + 学动作 · 12–16 周`,`${w}kg → 约 ${p1[1]}–${p1[0]}kg，体脂 24% → 17%。热量 −400，蛋白 2.2g/kg。新手期在热量缺口下也能长肌肉。跑步保持每周 3 次。`],
@@ -512,7 +569,7 @@ function renderPlan(){
 // ---------- 饮食页 ----------
 function renderDiet(){
   const s=DB.settings;
-  $('sWeight').value=s.weight||''; $('sAge').value=s.age||''; $('sPhase').value=s.phase||'cut'; $('sRuns').value=s.runs??3;
+  $('sWeight').value=s.weight||''; $('sAge').value=s.age||''; $('sStartWeight').value=s.startWeight||''; $('sPhase').value=s.phase||'cut'; $('sRuns').value=s.runs??3;
   const w=parseFloat(s.weight), age=parseInt(s.age)||25;
   if(!(w>0)){ ['mKcal','mPro','mCarb','mFat'].forEach(i=>$(i).textContent='--'); return; }
   const bmr=10*w+6.25*165-5*age+5;
@@ -520,21 +577,23 @@ function renderDiet(){
   const tdee=bmr*1.45+runs*350/7;
   const cut=s.phase==='cut'||s.phase==='cut2';
   const adj={cut:-400,cut2:-400,bulk:250,maintain:0}[s.phase]||0;
-  const kcal=Math.round((tdee+adj)/10)*10;
+  const kcal=Math.round((tdee+adj+(parseFloat(s.kcalAdj)||0))/10)*10;
   const pro=Math.round(w*(cut?2.2:2.0)), fat=Math.round(w*(cut?0.8:1.0));
   const carb=Math.max(0,Math.round((kcal-pro*4-fat*9)/4));
   $('mKcal').textContent=kcal; $('mPro').textContent=pro; $('mCarb').textContent=carb; $('mFat').textContent=fat;
-  $('mNote').textContent=`基础代谢约 ${Math.round(bmr)} 大卡，日常消耗约 ${Math.round(tdee)} 大卡（含每周 ${runs} 次跑步）。按这个吃两周，看周平均体重：减脂期每周应掉 0.4–0.6kg，增肌期每月涨 0.5–0.8kg，不对就每次调 100–150 大卡。跑步日再 +300 大卡碳水。`;
+  $('mNote').textContent=`基础代谢约 ${Math.round(bmr)} 大卡，日常消耗约 ${Math.round(tdee)} 大卡（含每周 ${runs} 次跑步）${s.kcalAdj?`，含教练建议调整 ${s.kcalAdj>0?'+':''}${s.kcalAdj}`:''}。按这个吃两周，看周平均体重：减脂期每周应掉 0.4–0.6kg，增肌期每月涨 0.5–0.8kg，不对就每次调 100–150 大卡。跑步日再 +300 大卡碳水。`;
+  const sw=parseFloat(s.startWeight)||68;
   const rows=[
-    ['现在',`${w.toFixed(1)} kg`,'从照片估计体脂 22–26%，BMI 25'],
-    ['阶段 1 终点',`${Math.round(w-6)}–${Math.round(w-5)} kg`,'体脂约 17%，肚子基本平，腹肌轮廓隐约可见'],
-    ['阶段 2 终点',`${Math.round(w+1)}–${Math.round(w+2)} kg`,'体脂约 19–20%，肩和手臂明显变大，肚子略回来，正常'],
-    ['阶段 3 终点',`${Math.round(w-2)}–${Math.round(w-1)} kg`,'体脂 13–15%，腹肌清晰，这是第一年的终点'],
+    ['起点',`${sw.toFixed(1)} kg`,'2026-10-23，从照片估计体脂 22–26%，BMI 25'],
+    ['现在',`${w.toFixed(1)} kg`,`${(w-sw)>=0?'+':''}${(w-sw).toFixed(1)} kg`],
+    ['阶段 1 终点',`${Math.round(sw-6)}–${Math.round(sw-5)} kg`,'体脂约 17%，肚子基本平，腹肌轮廓隐约可见'],
+    ['阶段 2 终点',`${Math.round(sw+1)}–${Math.round(sw+2)} kg`,'体脂约 19–20%，肩和手臂明显变大，肚子略回来，正常'],
+    ['阶段 3 终点',`${Math.round(sw-2)}–${Math.round(sw-1)} kg`,'体脂 13–15%，腹肌清晰，这是第一年的终点'],
     ['长期目标','74–76 kg','体脂 15%，目标照片换算到 165cm 的体重，3–5 年'],
   ];
   $('weightTargets').innerHTML=rows.map(r=>`<tr><th>${r[0]}</th><td><b>${r[1]}</b><br><span class="muted">${r[2]}</span></td></tr>`).join('');
 }
-['sWeight','sAge','sPhase','sRuns'].forEach(id=>$(id).addEventListener('input',e=>{ DB.settings[id.slice(1).toLowerCase()]=e.target.value; save(); renderDiet(); renderPlan(); renderToday(); }));
+[['sWeight','weight'],['sAge','age'],['sStartWeight','startWeight'],['sPhase','phase'],['sRuns','runs']].forEach(([id,k])=>$(id).addEventListener('input',e=>{ DB.settings[k]=e.target.value; if(k==='phase'){ DB.settings.phaseStart=TODAY; DB.settings.kcalAdj=0; } save(); renderDiet(); renderPlan(); renderToday(); }));
 
 // ---------- 记录页 ----------
 function e1rm(sets){ let b=0; sets.forEach(s=>{ const w=parseFloat(s.w),r=parseFloat(s.r); if(w>0&&r>0){ b=Math.max(b,w*(1+r/30)); } }); return b; }
