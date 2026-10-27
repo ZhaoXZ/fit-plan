@@ -476,23 +476,23 @@ function renderToday(){
     const isTime=/秒|分钟/.test(x.reps);
     const hideW=db.bw&&!db.wlabel&&!e.showW;
     const fill=(s,i)=>{ ['w','r'].forEach(f=>{ if(s[f]!=='' && s[f]!==undefined) return; const prev=e.sets.slice(0,i).reverse().find(q=>q[f]); if(prev){ s[f]=prev[f]; return; } if(last){ const q=last.sets[i]||last.sets[last.sets.length-1]; if(q&&q[f]) s[f]=q[f]; } }); };
+    const rg=(x.reps.match(/\d+\s*[–-]\s*\d+/)||[''])[0];
+    const follow=(i,f,prev,val)=>{ e.sets.forEach((q,j)=>{ if(j>i&&!q.done&&(!q[f]||String(q[f])===String(prev))){ q[f]=val; const el=sets.children[j]&&sets.children[j].querySelector(`[data-f=${f}]`); if(el) el.value=val; } }); };
     e.sets.forEach((s,i)=>{
       const row=document.createElement('div'); row.className='set'+(s.done?' done':'')+(hideW?' bw':'');
       row.innerHTML=`<div class="n">${i+1}</div>`+(hideW?'':`
         <div class="pm" data-d="-1">−</div><input type="number" step="0.5" inputmode="decimal" placeholder="${x.key==='run'?'km':(db.wlabel||'kg')}" value="${s.w}" data-f="w">
-        <div class="pm" data-d="1">+</div>`)+`<input type="number" inputmode="numeric" placeholder="${isTime?'秒/分':'次'}" value="${s.r}" data-f="r">
+        <div class="pm" data-d="1">+</div>`)+`<input type="number" inputmode="numeric" placeholder="${isTime?(x.key==='run'?'分钟':'秒'):(rg?rg+' 次':'次')}" value="${s.r}" data-f="r">
         <div class="chk">${s.done?'✓':''}</div>`;
-      row.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{ const f=inp.dataset.f; s[f]=inp.value;
-        e.sets.forEach((q,j)=>{ if(j>i&&!q.done&&!q[f]){ q[f]=inp.value; const el=sets.children[j]&&sets.children[j].querySelector(`[data-f=${f}]`); if(el) el.value=inp.value; } });
-        save(); }));
-      row.querySelectorAll('.pm').forEach(b=>b.onclick=()=>{ const step=db.rest>=150?2.5:1; const v=(parseFloat(s.w)||0)+step*parseInt(b.dataset.d); s.w=Math.max(0,Math.round(v*2)/2); row.querySelector('[data-f=w]').value=s.w; save(); });
+      row.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{ const f=inp.dataset.f; const prev=s[f]; s[f]=inp.value; follow(i,f,prev,inp.value); save(); }));
+      row.querySelectorAll('.pm').forEach(b=>b.onclick=()=>{ const step=db.rest>=150?2.5:1; const prev=s.w; const v=(parseFloat(s.w)||0)+step*parseInt(b.dataset.d); s.w=String(Math.max(0,Math.round(v*2)/2)); row.querySelector('[data-f=w]').value=s.w; follow(i,'w',prev,s.w); save(); });
       row.querySelector('.chk').onclick=()=>{
         s.done=!s.done; if(s.done){ const wi=row.querySelector('[data-f=w]'); if(wi) s.w=wi.value; s.r=row.querySelector('[data-f=r]').value; fill(s,i); vib(30); if(DB.settings.timer&&db.rest&&CUR===TODAY) startTimer(db.rest,db.zh); } else stopTimer();
         save(); renderToday(); };
       sets.appendChild(row);
     });
     const foot=document.createElement('div'); foot.className='foot';
-    foot.innerHTML=`<span class="last">${last?`上次 ${last.d.slice(5)}：${last.sets.filter(s=>s.w||s.r).map(s=>`${s.w||'-'}×${s.r||'-'}`).join(' / ')}<br>${progressHint(x,last,db)}`:(db.bw?'第一次做，填每组实际次数，之后只用打勾':'第一次做，先用能标准完成 10 次的重量')}</span>
+    foot.innerHTML=`<span class="last">${last?`上次 ${last.d.slice(5)}：${last.sets.filter(s=>s.w||s.r).map(s=>`${s.w||'-'}×${s.r||'-'}`).join(' / ')}<br>${progressHint(x,last,db)}`:(x.key==='run'?'填跑了多少公里、多少分钟，之后只用打勾':db.bw?`第一次做，目标每组 ${x.reps}，填实际做到的次数，之后只用打勾`:`第一次做，选一个能标准做到 ${rg||x.reps} 次、最后还剩 1–2 次余力的重量。填好第一组，下面几组会自动跟上`)}</span>
       <span style="white-space:nowrap">${db.bw&&!db.wlabel?`<button class="sm ghost" data-a="w">${e.showW?'去掉负重':'加负重'}</button> `:''}<button class="sm ghost" data-a="del">−组</button> <button class="sm ghost" data-a="add">+组</button> <button class="sm ok" data-a="all">全部 ✓</button></span>`;
     foot.querySelector('[data-a=all]').onclick=()=>{ e.sets.forEach((s,i)=>{ fill(s,i); s.done=true; }); save(); renderToday(); vib(30); };
     const wb=foot.querySelector('[data-a=w]'); if(wb) wb.onclick=()=>{ e.showW=!e.showW; if(!e.showW) e.sets.forEach(s=>s.w=''); save(); renderToday(); };
