@@ -112,6 +112,7 @@ svg.chart{width:100%;height:150px;display:block}
 .lib .r{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
 .lib .ico{width:48px;height:48px;border-radius:10px;background:var(--card2);flex:0 0 48px;display:flex;align-items:center;justify-content:center;font-size:20px}
 .login{display:none;position:fixed;inset:0;z-index:1000;background:var(--bg);align-items:center;justify-content:center;padding:24px}.login.show{display:flex}.login form{width:100%;max-width:340px}.login h1{margin:0 0 6px;font-size:26px}
+.ctip{margin:0 12px 8px;padding:8px 10px;border-radius:10px;background:var(--ok2);color:var(--ok);font-size:13px;line-height:1.45}
 .meals{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 details.wc summary{list-style:none;display:flex;align-items:center;gap:8px}details.wc summary::-webkit-details-marker{display:none}
 details.wc summary b{font-size:15px}details.wc summary small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
@@ -458,15 +459,16 @@ const CN='日一二三四五六';
 function rec(d){ if(!DB.workouts[d]) DB.workouts[d]={type:wk()[dow(d)],ex:{},note:'',finished:false}; return DB.workouts[d]; }
 function lastSession(exId,before){
   const ds=Object.keys(DB.workouts).filter(d=>d<before).sort().reverse();
-  for(const d of ds){ const e=DB.workouts[d].ex[exId]; if(e&&e.sets&&e.sets.some(s=>s.w||s.r)) return {d,sets:e.sets}; }
+  for(const d of ds){ const e=DB.workouts[d].ex[exId]; if(e&&e.sets&&e.sets.some(s=>s.done)) return {d,sets:e.sets.filter(s=>s.done)}; }
   return null;
 }
+const coachOf=id=>{ const c=DB.coach; return c&&CUR>=c.d&&c.ex?c.ex[id]:null; }; // 复盘后写进云端的下次建议
 function ensureSets(r,ex,n){
   if(!r.ex[ex.id]) r.ex[ex.id]={sets:[]};
   const e=r.ex[ex.id];
   if(e.sets.length===0){
-    const last=lastSession(ex.id,CUR);
-    for(let i=0;i<n;i++){ const ls=last&&last.sets[i]||last&&last.sets[last.sets.length-1]||{}; e.sets.push({w:ls.w||'',r:ls.r||'',done:false}); }
+    const last=lastSession(ex.id,CUR), c=coachOf(ex.id);
+    for(let i=0;i<n;i++){ const ls=last&&last.sets[i]||last&&last.sets[last.sets.length-1]||{}; e.sets.push(c&&c.w?{w:c.w,r:'',done:false}:{w:ls.w||'',r:ls.r||'',done:false}); }
   }
   return e;
 }
@@ -487,10 +489,10 @@ function wcRow(it){
 }
 function rampRow(r){ // 第一个大动作的热身组，有上次重量就给具体数字
   if(r.type==='run') return ''; const x=planExercises(r)[0]; if(!x||x.db.bw) return '';
-  const last=lastSession(x.id,CUR); const w=last?Math.max(0,...last.sets.map(s=>parseFloat(s.w)||0)):0;
+  const last=lastSession(x.id,CUR), c=coachOf(x.id); const w=c&&parseFloat(c.w)||(last?Math.max(0,...last.sets.map(s=>parseFloat(s.w)||0)):0);
   const bar=x.db.equipment==='barbell'?20:0; const rd=v=>Math.max(bar,Math.round(v/2.5)*2.5);
   let txt='先用正式重量的一半做 8 个，再用七成半做 4 个';
-  if(w){ const a=rd(w*.5),b=rd(w*.75); txt=a<b&&b<w?`上次 ${w}kg：先 ${a}kg × 8，再 ${b}kg × 4`:'用明显轻于正式重量的重量做 8 个'; }
+  if(w){ const a=rd(w*.5),b=rd(w*.75); txt=a<b&&b<w?`${c&&c.w?'今天':'上次'} ${w}kg：先 ${a}kg × 8，再 ${b}kg × 4`:'用明显轻于正式重量的重量做 8 个'; }
   return `<div class="lib"><div class="ico">🏋️</div><div><b>热身组 · ${x.db.zh}</b><small>${txt}。不用记录，也不要做到累</small></div></div>`;
 }
 function renderWC(r){
@@ -536,19 +538,20 @@ function renderToday(){
     const e=ensureSets(r,x,x.sets); const db=x.db;
     const allDone=e.sets.length>0&&e.sets.every(s=>s.done);
     e.sets.forEach(s=>{ total++; if(s.done){done++; vol+=(parseFloat(s.w)||0)*(parseFloat(s.r)||0);} });
-    const last=lastSession(x.id,CUR);
+    const last=lastSession(x.id,CUR), coach=coachOf(x.id);
     const card=document.createElement('div'); card.className='ex'+(allDone?' done':'');
     card.innerHTML=`<div class="head">
         <img class="thumb" src="${db.img}" alt="" loading="lazy">
         <div class="t"><b>${db.zh}</b><small>${db.en}</small>
           <div class="meta">${x.home?`<span class="pill r">在家 · 第 ${db.lv} 级</span>`:''}<span class="pill">${x.sets} 组 × ${x.reps}</span>${db.rest?`<span class="pill">休 ${db.rest}s</span>`:''}${x.id!==x.orig?'<span class="pill warn">已替换</span>':''}</div></div>
         <div class="more">›</div></div>
+      ${coach?`<div class="ctip">${coach.w?`<b>建议 ${coach.w}kg · ${x.sets} 组 × ${x.reps}</b><br>`:''}${coach.n||''}</div>`:''}
       <div class="sets"></div>`;
     card.querySelector('.head').onclick=()=>openSheet(x.id,{swapFor:x.orig});
     const sets=card.querySelector('.sets');
     const isTime=/秒|分钟/.test(x.reps);
     const hideW=db.bw&&!db.wlabel&&!e.showW;
-    const fill=(s,i)=>{ ['w','r'].forEach(f=>{ if(s[f]!=='' && s[f]!==undefined) return; const prev=e.sets.slice(0,i).reverse().find(q=>q[f]); if(prev){ s[f]=prev[f]; return; } if(last){ const q=last.sets[i]||last.sets[last.sets.length-1]; if(q&&q[f]) s[f]=q[f]; } }); };
+    const fill=(s,i)=>{ ['w','r'].forEach(f=>{ if(s[f]!=='' && s[f]!==undefined) return; const prev=e.sets.slice(0,i).reverse().find(q=>q[f]); if(prev){ s[f]=prev[f]; return; } if(last&&!(coach&&coach.w)){ const q=last.sets[i]||last.sets[last.sets.length-1]; if(q&&q[f]) s[f]=q[f]; } }); };
     const rg=(x.reps.match(/\d+\s*[–-]\s*\d+/)||[''])[0];
     const follow=(i,f,prev,val)=>{ e.sets.forEach((q,j)=>{ if(j>i&&!q.done&&(!q[f]||String(q[f])===String(prev))){ q[f]=val; const el=sets.children[j]&&sets.children[j].querySelector(`[data-f=${f}]`); if(el) el.value=val; } }); };
     e.sets.forEach((s,i)=>{
@@ -565,7 +568,7 @@ function renderToday(){
       sets.appendChild(row);
     });
     const foot=document.createElement('div'); foot.className='foot';
-    foot.innerHTML=`<span class="last">${last?`上次 ${last.d.slice(5)}：${last.sets.filter(s=>s.w||s.r).map(s=>`${s.w||'-'}×${s.r||'-'}`).join(' / ')}<br>${progressHint(x,last,db)}`:(x.key==='run'?'填跑了多少公里、多少分钟，之后只用打勾':db.bw?`第一次做，目标每组 ${x.reps}，填实际做到的次数，之后只用打勾`:`第一次做，选一个能标准做到 ${rg||x.reps} 次、最后还剩 1–2 次余力的重量。填好第一组，下面几组会自动跟上`)}</span>
+    foot.innerHTML=`<span class="last">${last?`上次 ${last.d.slice(5)}：${last.sets.filter(s=>s.w||s.r).map(s=>`${s.w||'-'}×${s.r||'-'}`).join(' / ')}${coach?'':'<br>'+progressHint(x,last,db)}`:(x.key==='run'?'填跑了多少公里、多少分钟，之后只用打勾':db.bw?`第一次做，目标每组 ${x.reps}，填实际做到的次数，之后只用打勾`:`第一次做，选一个能标准做到 ${rg||x.reps} 次、最后还剩 1–2 次余力的重量。填好第一组，下面几组会自动跟上`)}</span>
       <span style="white-space:nowrap">${db.bw&&!db.wlabel?`<button class="sm ghost" data-a="w">${e.showW?'去掉负重':'加负重'}</button> `:''}<button class="sm ghost" data-a="del">−组</button> <button class="sm ghost" data-a="add">+组</button> <button class="sm ok" data-a="all">全部 ✓</button></span>`;
     foot.querySelector('[data-a=all]').onclick=()=>{ e.sets.forEach((s,i)=>{ fill(s,i); s.done=true; }); save(); renderToday(); vib(30); };
     const wb=foot.querySelector('[data-a=w]'); if(wb) wb.onclick=()=>{ e.showW=!e.showW; if(!e.showW) e.sets.forEach(s=>s.w=''); save(); renderToday(); };
@@ -897,7 +900,7 @@ function ghFile(method,body,accept){
 }
 function recScore(r){ if(!r) return -1; let n=(r.finished?1000:0)+(r.note?1:0); Object.values(r.ex||{}).forEach(e=>(e.sets||[]).forEach(s=>{ n+=s.done?10:(s.w||s.r)?1:0; })); return n; }
 function mergeDB(l,c){ // 两边都改过：按天保留记录更完整的一份，打平时用本机
-  const o=Object.assign({},c,l,{workouts:Object.assign({},c.workouts),weights:Object.assign({},c.weights,l.weights),meals:Object.assign({},c.meals)});
+  const o=Object.assign({},c,l,{workouts:Object.assign({},c.workouts),weights:Object.assign({},c.weights,l.weights),meals:Object.assign({},c.meals),coach:c.coach||l.coach});
   Object.entries(l.meals||{}).forEach(([d,m])=>{ o.meals[d]=Object.assign({},o.meals[d],m); });
   Object.entries(l.workouts||{}).forEach(([d,r])=>{ if(recScore(r)>=recScore(o.workouts[d])) o.workouts[d]=r; });
   const ibs={}; [...(c.inbody||[]),...(l.inbody||[])].forEach(e=>{ ibs[e.d]=e; }); o.inbody=Object.values(ibs).sort((a,b)=>a.d<b.d?-1:1);
