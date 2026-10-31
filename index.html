@@ -665,9 +665,9 @@ function setMeal(k,v){ const m=DB.meals[CUR]=DB.meals[CUR]||{}; if(v) m[k]=v; el
 document.querySelectorAll('[data-m]').forEach(el=>el.addEventListener('input',()=>setMeal(el.dataset.m,el.value)));
 $('mealTxt').addEventListener('input',e=>setMeal('t',e.target.value));
 $('btnFinish').onclick=()=>{ const r=rec(CUR); r.finished=!r.finished;
-  if(r.finished){ planExercises(r).forEach(x=>{ const e=ensureSets(r,x,x.sets); const last=lastSession(x.id,CUR); e.sets.forEach((s,i)=>{ if(!s.r){ const prev=e.sets.slice(0,i).reverse().find(q=>q.r); const q=last&&(last.sets[i]||last.sets[last.sets.length-1]); s.r=prev?prev.r:(q&&q.r)||''; if(!s.w){ const pw=e.sets.slice(0,i).reverse().find(q=>q.w); s.w=pw?pw.w:(q&&q.w)||''; } } if(s.w||s.r) s.done=true; }); }); vib([30,50,30]); }
+  if(r.finished) vib([30,50,30]);
   save(); stopTimer(); renderToday();
-  if(r.finished){ const v=$('stVol').textContent; toast(r.type==='run'?'跑完了，1 小时内吃早餐：蛋白 + 300 大卡碳水':r.type==='rest'?'休息日打卡 ✓':`练完了，总容量 ${v} kg，吃够蛋白早点睡`); } };
+  if(r.finished){ const v=$('stVol').textContent, miss=planExercises(r).reduce((n,x)=>n+((r.ex[x.id]||{}).sets||[]).filter(q=>!q.done).length,0); toast(miss?`已完成，${miss} 组没打勾，不计入记录`:r.type==='run'?'跑完了，1 小时内吃早餐：蛋白 + 300 大卡碳水':r.type==='rest'?'休息日打卡 ✓':`练完了，总容量 ${v} kg，吃够蛋白早点睡`); } };
 
 // ---------- 休息计时 ----------
 let T={left:0,total:0,h:null};
