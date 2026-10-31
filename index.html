@@ -112,6 +112,7 @@ svg.chart{width:100%;height:150px;display:block}
 .lib .r{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
 .lib .ico{width:48px;height:48px;border-radius:10px;background:var(--card2);flex:0 0 48px;display:flex;align-items:center;justify-content:center;font-size:20px}
 .login{display:none;position:fixed;inset:0;z-index:1000;background:var(--bg);align-items:center;justify-content:center;padding:24px}.login.show{display:flex}.login form{width:100%;max-width:340px}.login h1{margin:0 0 6px;font-size:26px}
+.meals{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 details.wc summary{list-style:none;display:flex;align-items:center;gap:8px}details.wc summary::-webkit-details-marker{display:none}
 details.wc summary b{font-size:15px}details.wc summary small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
 details.wc summary .arr{margin-left:auto;color:var(--muted);transition:transform .2s}details.wc[open] summary .arr{transform:rotate(90deg)}
@@ -173,6 +174,18 @@ body.lock{overflow:hidden;position:fixed;left:0;right:0}
   <div id="warmBox"></div>
   <div id="exList"></div>
   <div id="coolBox"></div>
+  <div class="card">
+    <h2 id="mealHd">今日饮食 · 大卡</h2>
+    <div class="meals">
+      <div><label class="f">早餐</label><input type="number" inputmode="numeric" data-m="b" placeholder="0"></div>
+      <div><label class="f">午餐</label><input type="number" inputmode="numeric" data-m="l" placeholder="0"></div>
+      <div><label class="f">晚餐</label><input type="number" inputmode="numeric" data-m="d" placeholder="0"></div>
+      <div><label class="f">加餐</label><input type="number" inputmode="numeric" data-m="s" placeholder="0"></div>
+    </div>
+    <p class="muted" id="mealSum" style="margin:8px 0"></p>
+    <label class="f">吃了什么（可选）</label>
+    <textarea id="mealTxt" rows="2" placeholder="把 AI 识别的结果贴这里，有蛋白克数最好"></textarea>
+  </div>
   <div class="card">
     <div class="row">
       <div class="grow"><label class="f">今日体重 kg</label><input type="number" step="0.1" inputmode="decimal" id="dayWeight" placeholder="早上空腹"></div>
@@ -398,7 +411,7 @@ function wk(){ const n=parseInt(DB&&DB.settings&&DB.settings.runs); const r=isNa
 const KEY='fitplan_v2', SK='fitplan_sync', TK='fitplan_tok', CK='fitplan_cfg';
 const SY={cfg:null,tok:null,sha:null,dirty:false,busy:false,again:false,timer:0,pulled:0,err:'',at:0,last:null};
 const IB0={d:'2026-10-27',w:67.7,smm:26.6,pbf:29.7,vfa:79.4};
-const DEF=()=>({v:4,inbody:[Object.assign({},IB0)],settings:{weight:68,startWeight:68,age:31,phase:'cut',phaseStart:'2026-10-23',runs:3,timer:true,sound:true,kcalAdj:0,push:true,pushLv:0},workouts:{},weights:{}});
+const DEF=()=>({v:4,inbody:[Object.assign({},IB0)],settings:{weight:68,startWeight:68,age:31,phase:'cut',phaseStart:'2026-10-23',runs:3,timer:true,sound:true,kcalAdj:0,push:true,pushLv:0},workouts:{},weights:{},meals:{}});
 let DB=load();
 function load(){
   let d=DEF();
@@ -565,7 +578,7 @@ function renderToday(){
   $('prog').style.width=(total?done/total*100:0)+'%';
   $('stSets').textContent=`${done}/${total}`; $('stVol').textContent=Math.round(vol).toLocaleString();
   $('stWeek').textContent=weekCount(CUR);
-  $('dayWeight').value=DB.weights[CUR]||''; $('dayNote').value=r.note||'';
+  $('dayWeight').value=DB.weights[CUR]||''; $('dayNote').value=r.note||''; renderMeals(r);
   $('btnFinish').textContent=r.finished?'已完成 ✓  点击取消':'完成训练 ✓';
   $('btnFinish').className=r.finished?'ghost':'ok';
   renderCoach();
@@ -640,6 +653,15 @@ document.addEventListener('visibilitychange',()=>{ if(!document.hidden && iso(ne
 function weekCount(d){ const m=monday(d); let c=0; for(let i=0;i<7;i++){ const r=DB.workouts[addDays(m,i)]; if(r&&r.finished&&/upper|lower/.test(r.type)) c++; } return c; }
 $('dayWeight').addEventListener('input',e=>{ const v=parseFloat(e.target.value); if(v>0){ DB.weights[CUR]=v; if(CUR===TODAY){ DB.settings.weight=v; } } else delete DB.weights[CUR]; save(); });
 $('dayNote').addEventListener('input',e=>{ rec(CUR).note=e.target.value; save(); });
+const MEALS=['b','l','d','s'];
+function mealSum(r){ const m=DB.meals[CUR]||{}, sum=MEALS.reduce((a,k)=>a+(parseFloat(m[k])||0),0), P=kcalPlan();
+  const tg=P?P.kcal+(r.type==='run'?300:0):0, gap=sum-tg, nm=r.type==='run'?'跑步日目标':'目标';
+  $('mealSum').textContent=!tg?(sum?`合计 ${sum} 大卡`:''):!sum?`${nm} ${tg} 大卡`:`合计 ${sum} / ${nm} ${tg} 大卡，${gap>0?`超出 ${gap}`:gap<0?`还差 ${-gap}`:'正好'}`; }
+function renderMeals(r){ const m=DB.meals[CUR]||{}; $('mealHd').textContent=(CUR===TODAY?'今日':CUR.slice(5)+' ')+'饮食 · 大卡';
+  document.querySelectorAll('[data-m]').forEach(el=>{ el.value=m[el.dataset.m]||''; }); $('mealTxt').value=m.t||''; mealSum(r); }
+function setMeal(k,v){ const m=DB.meals[CUR]=DB.meals[CUR]||{}; if(v) m[k]=v; else delete m[k]; if(!Object.keys(m).length) delete DB.meals[CUR]; save(); mealSum(rec(CUR)); }
+document.querySelectorAll('[data-m]').forEach(el=>el.addEventListener('input',()=>setMeal(el.dataset.m,el.value)));
+$('mealTxt').addEventListener('input',e=>setMeal('t',e.target.value));
 $('btnFinish').onclick=()=>{ const r=rec(CUR); r.finished=!r.finished;
   if(r.finished){ planExercises(r).forEach(x=>{ const e=ensureSets(r,x,x.sets); const last=lastSession(x.id,CUR); e.sets.forEach((s,i)=>{ if(!s.r){ const prev=e.sets.slice(0,i).reverse().find(q=>q.r); const q=last&&(last.sets[i]||last.sets[last.sets.length-1]); s.r=prev?prev.r:(q&&q.r)||''; if(!s.w){ const pw=e.sets.slice(0,i).reverse().find(q=>q.w); s.w=pw?pw.w:(q&&q.w)||''; } } if(s.w||s.r) s.done=true; }); }); vib([30,50,30]); }
   save(); stopTimer(); renderToday();
@@ -746,17 +768,21 @@ function renderPlan(){
 }
 
 // ---------- 饮食页 ----------
-function renderDiet(){
-  const s=DB.settings;
-  $('sWeight').value=s.weight||''; $('sAge').value=s.age||''; $('sStartWeight').value=s.startWeight||''; $('sPhase').value=s.phase||'cut'; $('sRuns').value=s.runs??3;
-  const w=parseFloat(s.weight), age=parseInt(s.age)||31;
-  if(!(w>0)){ ['mKcal','mPro','mCarb','mFat'].forEach(i=>$(i).textContent='--'); return; }
+function kcalPlan(){ // 不跑步日的目标，跑步日另加 300
+  const s=DB.settings, w=parseFloat(s.weight), age=parseInt(s.age)||31; if(!(w>0)) return null;
   const L=ib().last; const ffm=L?ffmOf(L):null;
   const bmr=ffm?370+21.6*ffm:10*w+6.25*165.8-5*age+5; // 有体测用 Katch-McArdle，否则 Mifflin
   const tdee=bmr*1.45; // 非跑步日的日常消耗，跑步那天单独 +300
   const cut=s.phase==='cut'||s.phase==='cut2';
   const adj={cut:-400,cut2:-400,bulk:250,maintain:0}[s.phase]||0;
-  const kcal=Math.round((tdee+adj+(parseFloat(s.kcalAdj)||0))/10)*10;
+  return {w,L,ffm,bmr,tdee,cut,kcal:Math.round((tdee+adj+(parseFloat(s.kcalAdj)||0))/10)*10};
+}
+function renderDiet(){
+  const s=DB.settings;
+  $('sWeight').value=s.weight||''; $('sAge').value=s.age||''; $('sStartWeight').value=s.startWeight||''; $('sPhase').value=s.phase||'cut'; $('sRuns').value=s.runs??3;
+  const P=kcalPlan();
+  if(!P){ ['mKcal','mPro','mCarb','mFat'].forEach(i=>$(i).textContent='--'); return; }
+  const {w,L,ffm,bmr,tdee,cut,kcal}=P;
   const pro=Math.round(w*(cut?2.2:2.0)), fat=Math.round(w*(cut?0.8:1.0));
   const carb=Math.max(0,Math.round((kcal-pro*4-fat*9)/4));
   $('mKcal').textContent=kcal; $('mPro').textContent=pro; $('mCarb').textContent=carb; $('mFat').textContent=fat;
@@ -872,7 +898,8 @@ function ghFile(method,body,accept){
 }
 function recScore(r){ if(!r) return -1; let n=(r.finished?1000:0)+(r.note?1:0); Object.values(r.ex||{}).forEach(e=>(e.sets||[]).forEach(s=>{ n+=s.done?10:(s.w||s.r)?1:0; })); return n; }
 function mergeDB(l,c){ // 两边都改过：按天保留记录更完整的一份，打平时用本机
-  const o=Object.assign({},c,l,{workouts:Object.assign({},c.workouts),weights:Object.assign({},c.weights,l.weights)});
+  const o=Object.assign({},c,l,{workouts:Object.assign({},c.workouts),weights:Object.assign({},c.weights,l.weights),meals:Object.assign({},c.meals)});
+  Object.entries(l.meals||{}).forEach(([d,m])=>{ o.meals[d]=Object.assign({},o.meals[d],m); });
   Object.entries(l.workouts||{}).forEach(([d,r])=>{ if(recScore(r)>=recScore(o.workouts[d])) o.workouts[d]=r; });
   const ibs={}; [...(c.inbody||[]),...(l.inbody||[])].forEach(e=>{ ibs[e.d]=e; }); o.inbody=Object.values(ibs).sort((a,b)=>a.d<b.d?-1:1);
   o.settings=(l.ts||0)>=(c.ts||0)?l.settings:c.settings; o.ts=Math.max(l.ts||0,c.ts||0); return o;
