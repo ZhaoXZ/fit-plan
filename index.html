@@ -356,7 +356,7 @@ body.lock{overflow:hidden;position:fixed;left:0;right:0}
     <div class="mhd"><h2 id="calTitle"></h2><span><button class="nav" id="calPrev" aria-label="上个月">‹</button><button class="nav" id="calNext" aria-label="下个月">›</button></span></div>
     <div class="kpi"><div><small>连续达标</small><b id="kStreak">0</b></div><div><small>累计训练</small><b id="kTotal">0</b></div></div>
     <div class="cal" id="cal"></div>
-    <div class="legend muted"><span><i data-ic="str"></i>力量</span><span><i data-ic="run"></i>跑步</span><span><i data-ic="oth"></i>其他运动</span><span><i data-ic="rest"></i>休息</span></div>
+    <div class="legend muted"><span><i data-ic="arm"></i>上肢</span><span><i data-ic="leg"></i>下肢</span><span><i data-ic="run"></i>跑步</span><span><i data-ic="oth"></i>其他运动</span><span><i data-ic="rest"></i>休息</span></div>
     <p class="muted" style="margin:8px 0 0;font-size:12px">右边一列是每周达标：一周完成 3 次力量训练就打勾，连续达标的周会连成一条。</p>
   </div>
   <div class="card">
@@ -457,6 +457,7 @@ const combo=r=>!!(r&&r.run&&STR(r.type));
 const hasRun=r=>!!r&&(r.type==='run'||combo(r));
 const dayName=r=>PLAN[r.type].name+(combo(r)?' + 跑步':'');
 function pickType(r,k){
+  r.auto=false;
   if(k==='rest'){ r.type='rest'; r.run=false; return; }
   if(k==='run'){ if(STR(r.type)) r.run=!r.run; else { r.type=r.type==='run'?'rest':'run'; r.run=false; } return; }
   if(r.type===k){ r.type=r.run?'run':'rest'; r.run=false; return; }
@@ -467,6 +468,8 @@ const ICON={
   run:'<path d="M2.5 17.5V10c0-.8.7-1.4 1.5-1.2l3 .7 1.9-3.2 3.3.6 1.5 4.2 5.4 1.5c1.6.4 2.4 1.6 2.4 3.2v1.7z"/><path d="M2.5 14.5h19M9.6 9.4l1.6.3M10.4 11.4l1.6.3"/>',
   rest:'<path d="M19.5 14.2A8 8 0 1 1 9.8 4.5a6.4 6.4 0 0 0 9.7 9.7z"/>',
   oth:'<path d="M2.5 19 9 8.5l3.6 5.8 2.4-3.6 6.5 8.3z"/><path d="M7 12l2 1 2-1"/>',
+  arm:'<path d="M4 20.5V15c0-3.2 1.3-6.2 3.6-8.4L7 4.4C6.8 3.6 7.4 3 8.2 3h2.6c.8 0 1.3.7 1.1 1.5l-.8 3 .9 3.6a6 6 0 0 1 8.5 3.9c.6 3.2-1.8 6.5-5.1 6.5z"/><path d="M12 11.1c-1.2.8-2 2.1-2.2 3.6"/>',
+  leg:'<path d="M9 2.5v8.2c0 1.4-.4 2.8-1.1 4l-1 1.8c-.4.7-.2 1.6.5 2l4.3 2.4c.6.3 1.3.6 2 .6H19c.8 0 1.3-.9.8-1.6-.5-.7-1.3-1.2-2.2-1.4l-3.5-.8c-.6-.1-.9-.8-.6-1.3l.9-1.6c.6-1.1.9-2.3.9-3.5V2.5"/>',
   chk:'<path d="M5.5 12.5l4 4 9-9"/>',
   fire:'<path d="M12.4 1.5c.6 4.4-4.7 6.3-4.7 11.1 0 1 .3 2 .8 2.8-1.3-.6-2.3-1.9-2.6-3.7C4.6 13.4 4 15.3 4 17c0 4.4 3.6 7.5 8 7.5s8-3.1 8-7.5c0-6.2-5.6-9.1-7.6-15.5z"/>',
   plan:'<rect x="4.5" y="3.5" width="15" height="18" rx="3"/><path d="M8.5 8.5h7M8.5 12.5h7M8.5 16.5h4"/>',
@@ -475,7 +478,7 @@ const ICON={
 const ico=k=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
 document.querySelectorAll('[data-ic]').forEach(e=>{ e.outerHTML=ico(e.dataset.ic); });
 const SHORT={upperA:'上A',upperB:'上B',lowerA:'下A',lowerB:'下B',run:'跑步',rest:'休息'};
-function dayIcon(r){ if(!r||!r.finished) return ''; if(STR(r.type)) return 'str'; if(r.type==='run') return 'run'; if(otherMin(r)>0) return 'oth'; return 'rest'; }
+function dayIcon(r){ if(!r||!r.finished) return ''; if(STR(r.type)) return /upper/.test(r.type)?'arm':'leg'; if(r.type==='run') return 'run'; if(otherMin(r)>0) return 'oth'; return 'rest'; }
 // 每周完成 3 次力量训练算达标
 const WK_GOAL=3;
 function weekLifts(m){ let c=0; for(let i=0;i<7;i++){ const r=DB.workouts[addDays(m,i)]; if(r&&r.finished&&STR(r.type)) c++; } return c; }
@@ -542,7 +545,13 @@ function monday(s){ const w=dow(s); return addDays(s,-(w===0?6:w-1)); }
 const CN='日一二三四五六';
 
 // ---------- 记录模型 ----------
-function rec(d){ if(!DB.workouts[d]) DB.workouts[d]={type:wk()[dow(d)],ex:{},note:'',finished:false}; return DB.workouts[d]; }
+// 力量训练按顺序轮换：上一次练完哪个，这次就接下一个，不看星期几
+const ROT=['upperA','lowerA','upperB','lowerB'];
+function nextType(d){ const ds=Object.keys(DB.workouts).filter(x=>x<d&&DB.workouts[x].finished&&STR(DB.workouts[x].type)).sort();
+  if(!ds.length) return wk()[dow(d)]; return ROT[(ROT.indexOf(DB.workouts[ds[ds.length-1]].type)+1)%ROT.length]; }
+function rec(d){ if(!DB.workouts[d]) DB.workouts[d]={type:nextType(d),auto:true,ex:{},note:'',finished:false}; return DB.workouts[d]; }
+// 自动选的类型，在还没打勾、没手动改过之前，跟着前面的记录更新（比如补记了昨天）
+function autoType(r,d){ if(!r.auto||r.finished||r.run||(r.other&&r.other.length)||Object.values(r.ex||{}).some(e=>(e.sets||[]).some(q=>q.done))) return; const t=nextType(d); if(t!==r.type) r.type=t; }
 function lastSession(exId,before){
   const ds=Object.keys(DB.workouts).filter(d=>d<before).sort().reverse();
   for(const d of ds){ const e=DB.workouts[d].ex[exId]; if(e&&e.sets&&e.sets.some(s=>s.done)) return {d,sets:e.sets.filter(s=>s.done)}; }
@@ -602,23 +611,23 @@ function renderWC(r){
   else box('coolBox','cool',r.type==='rest'?'恢复拉伸（可选）':r.type==='run'?'跑后放松':'练后拉伸',w.coolMin,w.cool.map(wcRow).join(''),cn.join('<br>'),names(w.cool));
 }
 function renderToday(){
-  const r=rec(CUR); const p=PLAN[r.type];
+  const r=rec(CUR); autoType(r,CUR); const p=PLAN[r.type];
   $('hdrTitle').textContent=CUR===TODAY?'今日训练':'补记 '+CUR.slice(5);
   $('hdrSub').textContent=`${CUR} 周${CN[dow(CUR)]} · ${combo(r)?dayName(r):p.name+' '+p.sub}`;
   // 周条
   const wkEl=$('week'); const mon=monday(CUR), sun=addDays(mon,6), md=d=>`${+d.slice(5,7)}月${+d.slice(8)}日`;
   let wh=`<div class="wkhd"><b>${md(mon)} – ${mon.slice(5,7)===sun.slice(5,7)?+sun.slice(8)+'日':md(sun)}</b><span><button class="nav" data-n="-1" aria-label="上一周">‹</button><button class="nav" data-n="1" aria-label="下一周">›</button></span></div><div class="wkg">`;
   for(let i=0;i<7;i++){
-    const d=addDays(mon,i), rr=DB.workouts[d], type=rr?rr.type:wk()[dow(d)], ic=dayIcon(rr);
+    const d=addDays(mon,i), rr=DB.workouts[d], type=rr?rr.type:d===TODAY?nextType(d):'', ic=dayIcon(rr);
     const cls='c'+(ic?' fill':'')+(d===TODAY?' today':'')+(d===CUR?' cur':'')+(d>TODAY?' fut':'');
-    wh+=`<div class="wd" data-d="${d}"><small>${'一二三四五六日'[i]}</small><div class="${cls}">${ic?ico(ic)+(combo(rr)?'<i class="badge"></i>':''):parseInt(d.slice(8))}</div><em>${SHORT[type]}${combo(rr)?'+跑':''}</em></div>`;
+    wh+=`<div class="wd" data-d="${d}"><small>${'一二三四五六日'[i]}</small><div class="${cls}">${ic?ico(ic)+(combo(rr)?'<i class="badge"></i>':''):parseInt(d.slice(8))}</div><em>${type?SHORT[type]+(combo(rr)?'+跑':''):'&nbsp;'}</em></div>`;
   }
   wkEl.innerHTML=wh+'</div>';
   wkEl.querySelectorAll('.wd').forEach(el=>el.onclick=()=>{ const d=el.dataset.d; if(d>TODAY){toast('还没到这天');return;} CUR=d; renderToday(); });
   wkEl.querySelectorAll('.nav').forEach(b=>b.onclick=()=>{ if(b.dataset.n<0) CUR=addDays(CUR,-7); else CUR=addDays(mon,7)>TODAY?TODAY:addDays(CUR,7); renderToday(); });
   // 类型 chips
   const ch=$('typeChips'); ch.innerHTML='';
-  PLANS.forEach(pp=>{ const on=pp.key==='run'?hasRun(r):pp.key===r.type; const c=document.createElement('div'); c.className='chip'+(on?' on':''); c.textContent=pp.name+(wk()[dow(CUR)]===pp.key?' ·计划':''); c.onclick=()=>{ pickType(r,pp.key); save(); renderToday(); }; ch.appendChild(c); });
+  PLANS.forEach(pp=>{ const on=pp.key==='run'?hasRun(r):pp.key===r.type; const c=document.createElement('div'); c.className='chip'+(on?' on':''); c.textContent=pp.name+(STR(pp.key)&&nextType(CUR)===pp.key?' ·该练':''); c.onclick=()=>{ pickType(r,pp.key); save(); renderToday(); }; ch.appendChild(c); });
   renderWC(r);
   // 动作
   const list=$('exList'); list.innerHTML='';
@@ -883,7 +892,7 @@ function renderPlan(){
     if(t==='upperB'&&rn>=4) extra+='；第 4 次跑放在当天晚上，和力量隔 6 小时';
     if(DB.settings.push!==false&&(i===2||i===6)&&!/upper/.test(t)) extra+=`<br><span class="pill r">在家</span> 俯卧撑 3 组 · ${EXDB[PUSH[pushLv()]].zh}`;
     return `<tr><th>${names[i]}</th><td><span class="pill ${d[0]}">${d[1]}</span> ${extra}</td></tr>`; }).join('');
-  $('weekNote').textContent=`当前设置每周跑 ${rn} 次${rn>=3?'（周三、周六、周日）':rn===2?'（周三、周六）':rn===1?'（周三）':''}，在「饮食」页可以改次数，周计划跟着变；热量按不跑步那天算，跑步日另加 300。整体平移没问题，但「练腿前一天不跑步」，两次上肢训练之间至少隔两天。在「今日」页可以手动改当天类型。`;
+  $('weekNote').textContent=`当前设置每周跑 ${rn} 次${rn>=3?'（周三、周六、周日）':rn===2?'（周三、周六）':rn===1?'（周三）':''}，在「饮食」页可以改次数，周计划跟着变；热量按不跑步那天算，跑步日另加 300。上表只是参考的星期安排。实际在「今日」页按顺序轮换：上肢 A、下肢 A、上肢 B、下肢 B，上一次力量练完哪个，下一次就自动排下一个，不用对齐星期。上下肢交替，同一部位之间自然隔开至少一天。跑步自己在顶部点「轻松跑」加上。`;
   const TG=targets(); const pb=TG.ib?`体脂率 ${TG.pbf}% → 20%`:'体脂率降到 20% 左右';
   $('road').innerHTML=[
     ['cut',`阶段 1 · 减脂 + 学动作 · 16–20 周`,`${w}kg → 约 ${rng(TG.cut)}kg，${pb}，脂肪减掉 7–8kg，骨骼肌保持或微涨。热量 −400，蛋白 2.2g/kg，跑步每周 3 次。以体测体脂率为准，不只看体重。`],
