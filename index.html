@@ -4,159 +4,206 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0e1014">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f4f4f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-title" content="健身">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <title>健身计划</title>
 <style>
-:root{--bg:#0e1014;--card:#171a21;--card2:#1f2330;--line:#272b36;--text:#eceef3;--muted:#8d93a1;--accent:#5b8dff;--accent2:#1f3367;--ok:#39d98a;--ok2:#133a28;--warn:#ffb020;--danger:#ff5d5d;--u:#5b8dff;--l:#b48cff;--r:#39d98a;--x:#ffb020;--radius:16px}
+:root{
+  --bg:#f4f4f2;--card:#ffffff;--fill:#f0f0ee;--line:#e6e6e3;--ink:#0b0b0c;--on-ink:#ffffff;
+  --text:#111112;--muted:#76767a;--faint:#c4c4c6;
+  --accent:#ff5a1f;--accent-soft:#ffe6da;--accent-ink:#c2410c;
+  --ok:#15803d;--warn:#b45309;--danger:#dc2626;
+  --u:var(--ink);--l:var(--ink);--r:var(--ink);--x:var(--ink);
+  --chk:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4L18 8'/%3E%3C/svg%3E");--radius:22px;--shadow:0 1px 2px rgba(0,0,0,.04);--glass:rgba(244,244,242,.86);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#000000;--card:#141416;--fill:#1f1f22;--line:#2a2a2e;--ink:#f4f4f5;--on-ink:#0b0b0c;
+  --text:#f4f4f5;--muted:#8e8e93;--faint:#45454a;
+  --accent:#ff6a2b;--accent-soft:#3b1a0b;--accent-ink:#ff9b6e;
+  --chk:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4L18 8'/%3E%3C/svg%3E");--ok:#4ade80;--warn:#fbbf24;--danger:#f87171;--shadow:none;--glass:rgba(0,0,0,.82);color-scheme:dark;
+}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth;overscroll-behavior-y:none}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;padding-bottom:calc(84px + env(safe-area-inset-bottom));overscroll-behavior-y:none}
-header{position:sticky;top:0;z-index:5;background:rgba(14,16,20,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:calc(10px + env(safe-area-inset-top)) 16px 8px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}
-header h1{font-size:19px;margin:0;font-weight:700}
-header .sub{color:var(--muted);font-size:12px}
-main{padding:12px 12px 0;overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:calc(84px + env(safe-area-inset-bottom));overscroll-behavior-y:none}
+svg.i{width:22px;height:22px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+header{position:sticky;top:0;z-index:5;background:var(--glass);backdrop-filter:saturate(1.6) blur(16px);-webkit-backdrop-filter:saturate(1.6) blur(16px);padding:calc(12px + env(safe-area-inset-top)) 18px 10px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+header h1{font-size:28px;line-height:1.15;margin:0;font-weight:800;letter-spacing:-.02em}
+header .sub{color:var(--muted);font-size:13px;margin-top:2px}
+main{padding:6px 14px 0;overflow-x:hidden}
 .ex .sets,.ex .head{min-width:0}
-.page{display:none}.page.active{display:block;animation:fade .18s ease}
+.page{display:none}.page.active{display:block;animation:fade .2s ease}
 @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:12px}
-.card h2{font-size:13px;margin:0 0 10px;color:var(--muted);font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card h2{font-size:18px;margin:0 0 12px;color:var(--text);font-weight:750;letter-spacing:-.01em}
 .card h3{font-size:16px;margin:0 0 6px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .grow{flex:1;min-width:0}
-label.f{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+label.f{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:500}
 input,select,textarea,button{font:inherit;color:var(--text)}
-input,select,textarea{width:100%;background:#0e1014;border:1px solid var(--line);border-radius:12px;padding:10px 12px;outline:none}
-input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+input,select,textarea{width:100%;background:var(--fill);border:1.5px solid transparent;border-radius:14px;padding:10px 12px;outline:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--ink);background:var(--card)}
+input[type=checkbox]{accent-color:var(--ink);width:18px;height:18px}
 textarea{min-height:64px;resize:vertical}
-button{background:var(--accent);border:0;border-radius:12px;padding:11px 14px;font-weight:600;cursor:pointer}
+button{background:var(--ink);color:var(--on-ink);border:0;border-radius:999px;padding:12px 18px;font-weight:650;cursor:pointer;transition:transform .1s,opacity .15s}
 button:active{transform:scale(.97)}
-button.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}
-button.ok{background:var(--ok);color:#06240f}
-button.sm{padding:6px 10px;font-size:13px;border-radius:10px}
-.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;background:var(--card2);color:var(--muted);white-space:nowrap}
-.pill.u{background:var(--accent2);color:#b9ceff}.pill.l{background:#36285a;color:#dcc8ff}.pill.r{background:var(--ok2);color:#8ff0bd}.pill.x{background:#3f2d12;color:#ffd58a}
-.pill.ok{background:var(--ok2);color:#8ff0bd}.pill.warn{background:#3f2d12;color:#ffd58a}
+button.ghost{background:transparent;border:1.5px solid var(--line);color:var(--text)}
+button.ok{background:var(--accent);color:#fff}
+button.sm{padding:7px 13px;font-size:13px}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:550;background:var(--fill);color:var(--text);white-space:nowrap}
+.pill.warn,.pill.r{background:var(--accent-soft);color:var(--accent-ink)}
+#hdrPhase{background:var(--accent-soft);color:var(--accent-ink);margin-bottom:4px}
+.nav{background:var(--fill);color:var(--text);width:34px;height:34px;padding:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:20px;line-height:1;font-weight:500}
 /* 周条 */
-.week{display:grid;grid-template-columns:28px repeat(7,1fr) 28px;gap:4px;align-items:center}
-.week .nav{color:var(--muted);text-align:center;font-size:20px;line-height:1}
-.week .d{text-align:center;padding:6px 0;border-radius:12px;background:#0e1014;border:1px solid transparent}
-.week .d small{display:block;font-size:11px;color:var(--muted)}
-.week .d b{display:block;font-size:15px;font-weight:600}
-.week .d .dot{display:block;width:8px;height:8px;border-radius:50%;margin:3px auto 0;background:#2a2f3a}
-.week .d.u .dot{background:var(--u)}.week .d.l .dot{background:var(--l)}.week .d.r .dot{background:var(--r)}.week .d.x .dot{background:#3a3f4a}
-.week .d.done .dot{box-shadow:0 0 0 2px var(--ok)}
-.week .d.u.plus .dot{background:linear-gradient(90deg,var(--u) 50%,var(--r) 50%)}.week .d.l.plus .dot{background:linear-gradient(90deg,var(--l) 50%,var(--r) 50%)}.cal .d.plus{box-shadow:inset 0 -3px 0 var(--r)}
-.week .d.cur{border-color:var(--accent);background:var(--accent2)}
-.week .d.future{opacity:.45}
+.wkhd,.mhd{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.wkhd b{font-size:15px;font-weight:700}
+.wkhd span,.mhd span{display:flex;gap:6px}
+.wkg{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.wd{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;min-width:0}
+.wd small{font-size:12px;color:var(--muted);font-weight:500}
+.wd em{font-style:normal;font-size:10.5px;color:var(--muted);white-space:nowrap}
+.c{position:relative;width:40px;height:40px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text)}
+.c.fut{color:var(--muted)}
+.c.today{border:2px solid var(--ink)}
+.c.fill{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
+.c.fill svg.i{width:21px;height:21px}
+.c .badge{position:absolute;top:-2px;right:-2px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--card)}
+.wd .c.cur{box-shadow:0 0 0 3px var(--card),0 0 0 5px var(--accent)}
 .chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
-.chip{flex:0 0 auto;padding:7px 12px;border-radius:999px;background:var(--card2);color:var(--muted);font-size:13px;border:1px solid transparent}
-.chip.on{background:var(--accent2);color:#c9d8ff;border-color:var(--accent)}
-.bar{height:6px;background:#0e1014;border-radius:999px;overflow:hidden}
-.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--ok));width:0;transition:width .3s}
-.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.stat div{background:#0e1014;border-radius:12px;padding:10px;text-align:center}
-.stat b{display:block;font-size:20px}.stat small{color:var(--muted);font-size:12px}
+.chip{flex:0 0 auto;padding:7px 13px;border-radius:999px;background:transparent;color:var(--text);font-size:13px;font-weight:550;border:1.5px solid var(--line);cursor:pointer}
+.chip.on{background:var(--ink);color:var(--on-ink);border-color:var(--ink)}
+.bar{height:6px;background:var(--fill);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s;border-radius:999px}
+.stat,.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{grid-template-columns:1fr 1fr;margin-bottom:16px}
+.stat div,.kpi div{min-width:0}
+.stat small,.kpi small{display:block;color:var(--muted);font-size:12px;font-weight:500;order:-1}
+.stat div{display:flex;flex-direction:column}
+.stat b{display:block;font-size:24px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.2}
+.kpi b{display:block;font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+.kpi b i,.stat b i{font-style:normal;font-size:15px;font-weight:700;margin-left:2px}
 /* 动作卡 */
-.ex{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
-.ex.done{border-color:#1f4d35}
-.ex .head{display:flex;gap:12px;padding:12px;align-items:center}
-.ex .thumb{width:64px;height:64px;border-radius:12px;background:#fff;flex:0 0 64px;object-fit:cover}
+.ex{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)}
+.ex.done{border-color:var(--ink)}
+.ex .head{display:flex;gap:12px;padding:14px 14px 12px;align-items:center;cursor:pointer}
+.ex .thumb{width:60px;height:60px;border-radius:16px;background:#fff;flex:0 0 60px;object-fit:cover;border:1px solid var(--line)}
 .ex .t{flex:1;min-width:0}
-.ex .t b{display:block;font-size:16px;line-height:1.3}
-.ex.done .t b{color:var(--ok)}
-.ex .t small{display:block;color:var(--muted);font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ex .t .meta{margin-top:4px;display:flex;gap:6px;flex-wrap:wrap}
-.ex .more{color:var(--muted);font-size:22px;padding:0 4px}
-.sets{padding:0 12px 10px}
-.set{display:grid;grid-template-columns:22px 34px minmax(0,1fr) 34px minmax(0,1fr) 42px;gap:6px;align-items:center;margin-bottom:6px;min-width:0}
-.set .n{color:var(--muted);font-size:12px;text-align:center}
-.set input{padding:9px 4px;text-align:center;font-size:16px;border-radius:10px;min-width:0;width:100%}
+.ex .t b{display:flex;align-items:center;gap:6px;font-size:16.5px;line-height:1.3;font-weight:700}
+.ex.done .t b:after{content:"";width:18px;height:18px;border-radius:50%;flex:0 0 18px;background:var(--chk) center/12px no-repeat var(--ink)}
+.ex .t small{display:block;color:var(--muted);font-size:12px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ex .t .meta{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}
+.ex .more{color:var(--faint);font-size:22px;padding:0 2px}
+.sets{padding:0 14px 12px}
+.set{display:grid;grid-template-columns:20px 36px minmax(0,1fr) 36px minmax(0,1fr) 40px;gap:6px;align-items:center;margin-bottom:6px;min-width:0}
+.set .n{color:var(--muted);font-size:12px;text-align:center;font-weight:600}
+.set input{padding:9px 4px;text-align:center;font-size:16px;font-weight:600;border-radius:12px;min-width:0;width:100%;font-variant-numeric:tabular-nums}
 .set input::-webkit-outer-spin-button,.set input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .set input[type=number]{-moz-appearance:textfield}
-.set .pm{height:38px;border-radius:10px;background:var(--card2);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;user-select:none}
-.set .chk{height:38px;border-radius:10px;border:1px solid var(--line);background:#0e1014;display:flex;align-items:center;justify-content:center;font-size:18px}
-.set.bw{grid-template-columns:22px minmax(0,1fr) 42px}
-.set.done input{color:var(--ok)}.set.done .chk{background:var(--ok);border-color:var(--ok);color:#06240f}
-.sets .foot{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
-.sets .foot .last{font-size:12px;color:var(--muted)}
-.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-.cal .d{aspect-ratio:1;border-radius:9px;background:#0e1014;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted)}
-.cal .d.u{background:var(--accent2);color:#b9ceff}.cal .d.l{background:#36285a;color:#dcc8ff}.cal .d.r{background:var(--ok2);color:#8ff0bd}.cal .d.x{background:#3f2d12;color:#ffd58a}
-.cal .d.today{outline:2px solid var(--accent)}.cal .h{color:var(--muted);text-align:center;font-size:11px}
+.set .pm{height:38px;border-radius:12px;background:var(--fill);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;user-select:none;cursor:pointer}
+.set .chk{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;cursor:pointer;color:transparent}
+.set.bw{grid-template-columns:20px minmax(0,1fr) 40px}
+.set.done input{color:var(--muted)}.set.done .chk{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
+.sets .foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px}
+.sets .foot .last{font-size:12px;color:var(--muted);line-height:1.45}
+/* 月历 */
+.mhd h2{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) 46px;row-gap:0;column-gap:2px}
+.cal .h{color:var(--muted);text-align:center;font-size:12px;font-weight:600;padding-bottom:8px}
+.cal .cell{height:48px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.cal .cell .c{width:38px;height:38px;font-size:14px}
+.cal .cell.out .c{border-color:transparent;color:var(--faint)}
+.cal .cell.out .c.fill{opacity:.35;color:var(--on-ink)}
+.cal .sk{height:48px;display:flex;align-items:center;justify-content:center;position:relative}
+.cal .sk.cap:before{content:"";position:absolute;left:5px;right:5px;top:0;bottom:0;background:var(--accent-soft)}
+.cal .sk.cap.top:before{top:4px;border-top-left-radius:18px;border-top-right-radius:18px}
+.cal .sk.cap.bot:before{bottom:4px;border-bottom-left-radius:18px;border-bottom-right-radius:18px}
+.cal .sk .o{position:relative;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted)}
+.cal .sk .o.met{background:var(--accent);border-color:var(--accent);color:#fff}
+.cal .sk .o.met svg.i{width:15px;height:15px;stroke-width:3}
+.cal .sk .fire{position:relative;width:34px;height:40px;color:var(--accent);display:flex;align-items:center;justify-content:center}
+.cal .sk .fire svg{position:absolute;inset:0;width:100%;height:100%;fill:currentColor;stroke:none}
+.cal .sk .fire b{position:relative;color:#fff;font-size:13px;font-weight:800;margin-top:9px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:12px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend svg.i{width:16px;height:16px}
 table{width:100%;border-collapse:collapse;font-size:14px}
-td,th{padding:7px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+td,th{padding:8px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
 th{color:var(--muted);font-weight:500;font-size:12px;white-space:nowrap}
 tr:last-child td,tr:last-child th{border-bottom:0}
 .macro{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.macro div{background:#0e1014;border-radius:12px;padding:10px 6px;text-align:center}
-.macro b{display:block;font-size:19px}.macro small{color:var(--muted);font-size:11px}
+.macro div{background:var(--fill);border-radius:16px;padding:12px 6px;text-align:center}
+.macro b{display:block;font-size:20px;font-weight:800;letter-spacing:-.02em}.macro small{color:var(--muted);font-size:11px}
 ul,ol{padding-left:20px;margin:6px 0}li{margin:4px 0}
 .muted{color:var(--muted);font-size:13px}
 svg.chart{width:100%;height:150px;display:block}
 /* 路线图 */
-.road{position:relative;padding-left:22px}
+.road{position:relative;padding-left:24px}
 .road:before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--line)}
 .road .ph{position:relative;margin-bottom:14px}
-.road .ph:before{content:"";position:absolute;left:-20px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--line);border:2px solid var(--bg)}
-.road .ph.on:before{background:var(--accent);box-shadow:0 0 0 3px var(--accent2)}
+.road .ph:before{content:"";position:absolute;left:-22px;top:5px;width:14px;height:14px;border-radius:50%;background:var(--card);border:2px solid var(--line)}
+.road .ph.on:before{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
 .road .ph b{display:block}.road .ph small{color:var(--muted);display:block}
 /* 动作库列表 */
-.lib{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.lib{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
 .lib:last-child{border-bottom:0}
-.lib img{width:48px;height:48px;border-radius:10px;background:#fff;flex:0 0 48px}
-.lib b{display:block;font-size:15px}.lib small{color:var(--muted);font-size:12px}
+.lib img{width:48px;height:48px;border-radius:14px;background:#fff;flex:0 0 48px;border:1px solid var(--line)}
+.lib b{display:block;font-size:15px;font-weight:650}.lib small{color:var(--muted);font-size:12px}
 .lib .r{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
-.lib .ico{width:48px;height:48px;border-radius:10px;background:var(--card2);flex:0 0 48px;display:flex;align-items:center;justify-content:center;font-size:20px}
-.login{display:none;position:fixed;inset:0;z-index:1000;background:var(--bg);align-items:center;justify-content:center;padding:24px}.login.show{display:flex}.login form{width:100%;max-width:340px}.login h1{margin:0 0 6px;font-size:26px}
-.ctip{margin:0 12px 8px;padding:8px 10px;border-radius:10px;background:var(--ok2);color:var(--ok);font-size:13px;line-height:1.45}
+.lib .ico{width:48px;height:48px;border-radius:50%;background:var(--fill);flex:0 0 48px;display:flex;align-items:center;justify-content:center}
+.login{display:none;position:fixed;inset:0;z-index:1000;background:var(--bg);align-items:center;justify-content:center;padding:24px}.login.show{display:flex}.login form{width:100%;max-width:340px}.login h1{margin:0 0 6px;font-size:32px;font-weight:800;letter-spacing:-.02em}
+.ctip{margin:0 14px 10px;padding:10px 12px;border-radius:14px;background:var(--accent-soft);color:var(--accent-ink);font-size:13px;line-height:1.45}
 .meals{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-details.wc summary{list-style:none;display:flex;align-items:center;gap:8px}details.wc summary::-webkit-details-marker{display:none}
-details.wc summary b{font-size:15px}details.wc summary small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
-details.wc summary .arr{margin-left:auto;color:var(--muted);transition:transform .2s}details.wc[open] summary .arr{transform:rotate(90deg)}
-details.wc .list{margin-top:8px}.wch{font-size:12px;color:var(--accent);margin:10px 0 2px;font-weight:600}.wch:first-child{margin-top:0}
-.oth{display:grid;grid-template-columns:1fr 90px 36px;gap:8px;margin-bottom:8px;align-items:center}.oth .x{color:var(--muted);text-align:center;padding:8px 0}
+details.wc summary{list-style:none;display:flex;align-items:center;gap:8px;cursor:pointer}details.wc summary::-webkit-details-marker{display:none}
+details.wc summary b{font-size:16px;font-weight:700}details.wc summary small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+details.wc summary .arr{margin-left:auto;color:var(--faint);font-size:20px;transition:transform .2s}details.wc[open] summary .arr{transform:rotate(90deg)}
+details.wc .list{margin-top:8px}.wch{font-size:12px;color:var(--accent-ink);margin:12px 0 2px;font-weight:700}.wch:first-child{margin-top:0}
+.oth{display:grid;grid-template-columns:1fr 90px 36px;gap:8px;margin-bottom:8px;align-items:center}.oth .x{color:var(--muted);text-align:center;padding:8px 0;cursor:pointer}
 .qk{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}details.wc .nt{color:var(--muted);font-size:12px;margin:8px 0 0}
 /* 底部导航 */
-nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:rgba(17,19,25,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom)}
-nav button{flex:1;background:transparent;color:var(--muted);border-radius:0;padding:10px 0 8px;font-size:11px;font-weight:500}
-nav button.active{color:var(--accent)}
-nav button span{display:block;font-size:22px;line-height:1.2}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--glass);backdrop-filter:saturate(1.6) blur(16px);-webkit-backdrop-filter:saturate(1.6) blur(16px);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:transparent;color:var(--muted);border-radius:0;padding:9px 0 7px;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button svg.i{width:24px;height:24px}
+nav button.active{color:var(--text)}
+nav button.active svg.i{stroke-width:2.4}
 /* 休息计时 */
-.timer{position:fixed;left:12px;right:12px;bottom:calc(72px + env(safe-area-inset-bottom));z-index:6;background:var(--card2);border:1px solid var(--accent);border-radius:14px;padding:10px 14px;display:none;align-items:center;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.timer{position:fixed;left:12px;right:12px;bottom:calc(74px + env(safe-area-inset-bottom));z-index:6;background:var(--card);border:1.5px solid var(--ink);border-radius:22px;padding:12px 14px;display:none;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
 .timer.show{display:flex}
-.timer b{font-size:26px;font-variant-numeric:tabular-nums;min-width:70px}
+.timer b{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;min-width:72px;letter-spacing:-.02em;line-height:1.1}
 .timer small{color:var(--muted);display:block;font-size:12px}
-.timer .bar{flex:1}
+.timer>div:first-child{flex:1;min-width:0}.timer small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.timer{overflow:hidden}.timer .bar{position:absolute;left:0;right:0;bottom:0;height:4px;border-radius:0;background:transparent}
 #tSnd{padding:6px 9px;font-size:16px;line-height:1}
 /* 详情抽屉 */
 .sheet{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;visibility:hidden;transition:visibility 0s .56s}
 .sheet.show{visibility:visible;transition:visibility 0s}
-.sheet .dim{position:absolute;inset:0;background:rgba(0,0,0,.62);opacity:0;transition:opacity .56s cubic-bezier(.4,0,.6,1)}
+.sheet .dim{position:absolute;inset:0;background:rgba(0,0,0,.45);opacity:0;transition:opacity .56s cubic-bezier(.4,0,.6,1)}
 .sheet.show .dim{opacity:1;transition:opacity .4s ease-out}
-.sheet .panel{position:relative;background:var(--bg);width:100%;max-height:85vh;border-radius:22px 22px 0 0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:0 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .56s cubic-bezier(.5,.05,.6,1);will-change:transform;box-shadow:0 -12px 40px rgba(0,0,0,.45)}
+.sheet .panel{position:relative;background:var(--card);width:100%;max-height:85vh;border-radius:26px 26px 0 0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:0 18px calc(20px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .56s cubic-bezier(.5,.05,.6,1);will-change:transform;box-shadow:0 -12px 40px rgba(0,0,0,.2)}
 .sheet.show .panel{transform:translateY(0);transition:transform .46s cubic-bezier(.32,.72,0,1)}
 .sheet.drag .panel,.sheet.drag .dim{transition:none}
-.sheet .top{position:sticky;top:0;z-index:2;background:var(--bg);display:flex;align-items:center;justify-content:space-between;padding:8px 0 4px}
-.sheet .top .x{width:40px;height:40px;border-radius:50%;background:var(--card2);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:20px}
+.sheet .top{position:sticky;top:0;z-index:2;background:var(--card);display:flex;align-items:center;justify-content:space-between;padding:8px 0 4px}
+.sheet .top .x{width:36px;height:36px;border-radius:50%;background:var(--fill);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer}
 body.lock{overflow:hidden;position:fixed;left:0;right:0}
-.sheet .grab{width:40px;height:4px;border-radius:2px;background:var(--line)}
-.sheet .gif{width:100%;max-width:220px;aspect-ratio:1;border-radius:16px;background:#fff;display:block;margin:0 auto 10px;object-fit:contain}
-.sheet h2{font-size:20px;margin:0 0 2px}
+.sheet .grab{width:40px;height:5px;border-radius:3px;background:var(--line)}
+.sheet .gif{width:100%;max-width:220px;aspect-ratio:1;border-radius:20px;background:#fff;display:block;margin:0 auto 10px;object-fit:contain;border:1px solid var(--line)}
+.sheet h2{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0 0 2px}
 .sheet .en{color:var(--muted);font-size:13px;margin-bottom:8px}
-.sheet h4{font-size:13px;color:var(--muted);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.5px}
+.sheet h4{font-size:14px;color:var(--text);font-weight:700;margin:16px 0 6px}
 .sheet .alt{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
 .sheet .alt div{flex:0 0 auto;text-align:center;font-size:12px;color:var(--muted)}
-.sheet .alt img{width:64px;height:64px;border-radius:12px;background:#fff;display:block;margin-bottom:4px}
-.sheet .attr{font-size:11px;color:#555b68;text-align:center;margin-top:12px}
-.toast{position:fixed;left:50%;bottom:calc(140px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#2a2f3a;padding:9px 18px;border-radius:999px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:30;white-space:nowrap}
+.sheet .alt img{width:64px;height:64px;border-radius:14px;background:#fff;display:block;margin-bottom:4px;border:1px solid var(--line)}
+.sheet .attr{font-size:11px;color:var(--faint);text-align:center;margin-top:12px}
+.toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--on-ink);padding:10px 18px;border-radius:999px;font-size:13px;font-weight:600;opacity:0;transition:.25s;pointer-events:none;z-index:30;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 .toast.show{opacity:1}
-.empty{text-align:center;padding:30px 10px;color:var(--muted)}
-.empty span{font-size:40px;display:block;margin-bottom:6px}
+.empty{text-align:center;padding:28px 10px;color:var(--muted)}
+.empty .c{margin:0 auto 10px;width:52px;height:52px}
+.empty .c svg.i{width:26px;height:26px}
+.empty b{display:block;color:var(--text);font-size:17px;margin-bottom:2px}
 </style>
 </head>
 <body>
@@ -306,9 +353,11 @@ body.lock{overflow:hidden;position:fixed;left:0;right:0}
 <!-- ===== 记录 ===== -->
 <section class="page" id="page-log">
   <div class="card">
-    <h2>最近 8 周打卡</h2>
+    <div class="mhd"><h2 id="calTitle"></h2><span><button class="nav" id="calPrev" aria-label="上个月">‹</button><button class="nav" id="calNext" aria-label="下个月">›</button></span></div>
+    <div class="kpi"><div><small>连续达标</small><b id="kStreak">0</b></div><div><small>累计训练</small><b id="kTotal">0</b></div></div>
     <div class="cal" id="cal"></div>
-    <div class="row" style="margin-top:8px"><span class="pill u">上肢</span><span class="pill l">下肢</span><span class="pill r">跑步</span><span class="pill x">休息</span></div>
+    <div class="legend muted"><span><i data-ic="str"></i>力量</span><span><i data-ic="run"></i>跑步</span><span><i data-ic="oth"></i>其他运动</span><span><i data-ic="rest"></i>休息</span></div>
+    <p class="muted" style="margin:8px 0 0;font-size:12px">右边一列是每周达标：一周完成 3 次力量训练就打勾，连续达标的周会连成一条。</p>
   </div>
   <div class="card">
     <h2>体重趋势 · 90 天</h2>
@@ -380,10 +429,10 @@ body.lock{overflow:hidden;position:fixed;left:0;right:0}
 </div>
 
 <nav>
-  <button data-page="today" class="active"><span>🏋️</span>今日</button>
-  <button data-page="plan"><span>📋</span>计划</button>
-  <button data-page="diet"><span>🍚</span>饮食</button>
-  <button data-page="log"><span>📈</span>记录</button>
+  <button data-page="today" class="active"><i data-ic="str"></i>今日</button>
+  <button data-page="plan"><i data-ic="plan"></i>计划</button>
+  <button data-page="diet"><i data-ic="diet"></i>饮食</button>
+  <button data-page="log"><i data-ic="log"></i>记录</button>
 </nav>
 
 <div class="sheet" id="sheet"><div class="dim" id="sheetDim"></div><div class="panel" id="sheetPanel"></div></div>
@@ -394,7 +443,7 @@ body.lock{overflow:hidden;position:fixed;left:0;right:0}
   <input type="text" name="username" autocomplete="username" value="fit-plan" hidden>
   <input type="password" id="lPw" autocomplete="current-password" placeholder="密码" required>
   <label class="row" style="gap:8px;margin:10px 0"><input type="checkbox" id="lKeep" checked style="width:auto"> 在这台设备上保持登录</label>
-  <button class="ok" id="lGo" style="width:100%">登录</button>
+  <button id="lGo" style="width:100%">登录</button>
   <p id="lErr" style="color:var(--danger);font-size:13px;min-height:20px;margin:10px 0 0"></p>
 </form></div>
 
@@ -413,6 +462,24 @@ function pickType(r,k){
   if(r.type===k){ r.type=r.run?'run':'rest'; r.run=false; return; }
   if(r.type==='run') r.run=true; r.type=k;
 }
+const ICON={
+  str:'<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>',
+  run:'<path d="M2.5 17.5V10c0-.8.7-1.4 1.5-1.2l3 .7 1.9-3.2 3.3.6 1.5 4.2 5.4 1.5c1.6.4 2.4 1.6 2.4 3.2v1.7z"/><path d="M2.5 14.5h19M9.6 9.4l1.6.3M10.4 11.4l1.6.3"/>',
+  rest:'<path d="M19.5 14.2A8 8 0 1 1 9.8 4.5a6.4 6.4 0 0 0 9.7 9.7z"/>',
+  oth:'<path d="M2.5 19 9 8.5l3.6 5.8 2.4-3.6 6.5 8.3z"/><path d="M7 12l2 1 2-1"/>',
+  chk:'<path d="M5.5 12.5l4 4 9-9"/>',
+  fire:'<path d="M12.4 1.5c.6 4.4-4.7 6.3-4.7 11.1 0 1 .3 2 .8 2.8-1.3-.6-2.3-1.9-2.6-3.7C4.6 13.4 4 15.3 4 17c0 4.4 3.6 7.5 8 7.5s8-3.1 8-7.5c0-6.2-5.6-9.1-7.6-15.5z"/>',
+  plan:'<rect x="4.5" y="3.5" width="15" height="18" rx="3"/><path d="M8.5 8.5h7M8.5 12.5h7M8.5 16.5h4"/>',
+  diet:'<path d="M3 11.5h18a9 9 0 0 1-18 0z"/><path d="M8.5 7.5c0-1.5 1-1.8 1-3.3M12 7.5c0-1.5 1-1.8 1-3.3M15.5 7.5c0-1.5 1-1.8 1-3.3"/>',
+  log:'<path d="M4 20.5V11M10 20.5V4.5M16 20.5V9M21.5 20.5h-19"/>'};
+const ico=k=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
+document.querySelectorAll('[data-ic]').forEach(e=>{ e.outerHTML=ico(e.dataset.ic); });
+const SHORT={upperA:'上A',upperB:'上B',lowerA:'下A',lowerB:'下B',run:'跑步',rest:'休息'};
+function dayIcon(r){ if(!r||!r.finished) return ''; if(STR(r.type)) return 'str'; if(r.type==='run') return 'run'; if(otherMin(r)>0) return 'oth'; return 'rest'; }
+// 每周完成 3 次力量训练算达标
+const WK_GOAL=3;
+function weekLifts(m){ let c=0; for(let i=0;i<7;i++){ const r=DB.workouts[addDays(m,i)]; if(r&&r.finished&&STR(r.type)) c++; } return c; }
+function streakWeeks(){ let m=monday(TODAY), n=weekLifts(m)>=WK_GOAL?1:0; m=addDays(m,-7); while(weekLifts(m)>=WK_GOAL){ n++; m=addDays(m,-7); } return n; }
 const otherMin=r=>((r&&r.other)||[]).reduce((n,o)=>n+(parseFloat(o.m)||0),0);
 const activeDay=r=>hasRun(r)||otherMin(r)>=45; // 跑步或其他运动 45 分钟以上，按运动日给热量
 const WC = {"upperA": {"warmMin": 6, "coolMin": 4, "warm": [{"t": "快走、单车或椭圆机", "dose": "3 分钟", "cue": "身体微微发热就够"}, {"id": "1167", "dose": "15 次", "cue": ""}, {"id": "0235", "dose": "12 次 / 侧", "cue": "用最轻的配重"}, {"id": "3021", "dose": "10 次", "cue": ""}, {"id": "0688", "dose": "8 次", "cue": "为引体做准备"}], "cool": [{"id": "1405", "dose": "30 秒 × 2", "cue": "胸和背阔"}, {"id": "1346", "dose": "30 秒 / 侧", "cue": "腋下到腰侧"}, {"id": "0669", "dose": "30 秒 / 侧", "cue": "肩后束"}, {"id": "0643", "dose": "30 秒 / 侧", "cue": "手臂后侧"}]}, "upperB": {"warmMin": 6, "coolMin": 4, "warm": [{"t": "快走、单车或椭圆机", "dose": "3 分钟", "cue": "身体微微发热就够"}, {"id": "1167", "dose": "15 次", "cue": ""}, {"id": "0235", "dose": "12 次 / 侧", "cue": "用最轻的配重"}, {"id": "3021", "dose": "10 次", "cue": ""}, {"id": "0233", "dose": "12 次", "cue": "轻重量，先让后背醒过来"}], "cool": [{"id": "1405", "dose": "30 秒 × 2", "cue": "胸和背阔"}, {"id": "1346", "dose": "30 秒 / 侧", "cue": "腋下到腰侧"}, {"id": "0669", "dose": "30 秒 / 侧", "cue": "肩后束"}, {"id": "0643", "dose": "30 秒 / 侧", "cue": "手臂后侧"}]}, "lowerA": {"warmMin": 6, "coolMin": 4, "warm": [{"t": "快走、单车或椭圆机", "dose": "3 分钟", "cue": "身体微微发热就够"}, {"id": "1604", "dose": "5 次 / 侧", "cue": "打开髋和胸椎"}, {"id": "3013", "dose": "12 次", "cue": "先唤醒臀部"}, {"id": "1368", "dose": "10 圈 / 侧", "cue": "脚踝灵活，深蹲更稳"}], "cool": [{"id": "3533", "dose": "30 秒 / 侧", "cue": "大腿前侧"}, {"id": "1511", "dose": "30 秒 / 侧", "cue": "硬拉后最紧"}, {"id": "1424", "dose": "30 秒 / 侧", "cue": "臀部"}]}, "lowerB": {"warmMin": 6, "coolMin": 4, "warm": [{"t": "快走、单车或椭圆机", "dose": "3 分钟", "cue": "身体微微发热就够"}, {"id": "1604", "dose": "5 次 / 侧", "cue": "打开髋和胸椎"}, {"id": "3013", "dose": "12 次", "cue": "先唤醒臀部"}, {"id": "3655", "dose": "6 次 / 侧", "cue": "为分腿蹲做准备"}], "cool": [{"id": "3533", "dose": "30 秒 / 侧", "cue": "大腿前侧"}, {"id": "1424", "dose": "30 秒 / 侧", "cue": "分腿蹲后最紧"}, {"id": "1377", "dose": "30 秒 / 侧", "cue": "提踵后的小腿"}]}, "run": {"warmMin": 5, "coolMin": 25, "warm": [{"t": "快走", "dose": "3 分钟", "cue": "空腹时不要一上来就跑"}, {"id": "1368", "dose": "10 圈 / 侧", "cue": ""}, {"id": "3655", "dose": "8 次 / 侧", "cue": ""}, {"id": "1604", "dose": "3 次 / 侧", "cue": ""}, {"t": "慢跑起步", "dose": "前 5 分钟", "cue": "比平时慢一点，再回到正常配速"}], "cool": [{"t": "快走", "dose": "20 分钟", "cue": "这就是你的放松，不用另外加"}, {"id": "1377", "dose": "45 秒 / 侧", "cue": "跑后最紧"}, {"id": "3533", "dose": "30 秒 / 侧", "cue": "大腿和髋前侧"}, {"id": "1511", "dose": "30 秒 / 侧", "cue": "大腿后侧"}, {"id": "1424", "dose": "30 秒 / 侧", "cue": "臀部"}]}, "rest": {"warmMin": 0, "coolMin": 8, "warm": [], "cool": [{"id": "1604", "dose": "5 次 / 侧", "cue": "先让身体动起来"}, {"id": "1346", "dose": "45 秒 / 侧", "cue": ""}, {"id": "3533", "dose": "45 秒 / 侧", "cue": ""}, {"id": "1511", "dose": "45 秒 / 侧", "cue": ""}, {"id": "1424", "dose": "45 秒 / 侧", "cue": ""}]}};
@@ -502,7 +569,7 @@ function planExercises(r,d){ // 当天的动作列表（含替换、居家俯卧
 // ---------- 热身和拉伸 ----------
 const wcOpen={warm:false,cool:false};
 function wcRow(it){
-  if(it.t) return `<div class="lib"><div class="ico">🚶</div><div><b>${it.t}</b>${it.cue?`<small>${it.cue}</small>`:''}</div><span class="r">${it.dose}</span></div>`;
+  if(it.t) return `<div class="lib"><div class="ico">${ico(/跑/.test(it.t)?"run":"oth")}</div><div><b>${it.t}</b>${it.cue?`<small>${it.cue}</small>`:''}</div><span class="r">${it.dose}</span></div>`;
   const d=EXDB[it.id];
   return `<div class="lib" data-id="${it.id}"><img src="${d.img}" loading="lazy"><div><b>${d.zh}</b>${it.cue?`<small>${it.cue}</small>`:''}</div><span class="r">${it.dose} ›</span></div>`;
 }
@@ -512,7 +579,7 @@ function rampRow(r){ // 第一个大动作的热身组，有上次重量就给�
   const bar=x.db.equipment==='barbell'?20:0; const rd=v=>Math.max(bar,Math.round(v/2.5)*2.5);
   let txt='先用正式重量的一半做 8 个，再用七成半做 4 个';
   if(w){ const a=rd(w*.5),b=rd(w*.75); txt=a<b&&b<w?`${c&&c.w?'今天':'上次'} ${w}kg：先 ${a}kg × 8，再 ${b}kg × 4`:'用明显轻于正式重量的重量做 8 个'; }
-  return `<div class="lib"><div class="ico">🏋️</div><div><b>热身组 · ${x.db.zh}</b><small>${txt}。不用记录，也不要做到累</small></div></div>`;
+  return `<div class="lib"><div class="ico">${ico("str")}</div><div><b>热身组 · ${x.db.zh}</b><small>${txt}。不用记录，也不要做到累</small></div></div>`;
 }
 function renderWC(r){
   const w=WC[r.type], push=pushDay(CUR,r);
@@ -539,17 +606,16 @@ function renderToday(){
   $('hdrTitle').textContent=CUR===TODAY?'今日训练':'补记 '+CUR.slice(5);
   $('hdrSub').textContent=`${CUR} 周${CN[dow(CUR)]} · ${combo(r)?dayName(r):p.name+' '+p.sub}`;
   // 周条
-  const wkEl=$('week'); wkEl.innerHTML='';
-  const mon=monday(CUR);
-  const nl=document.createElement('div'); nl.className='nav'; nl.textContent='‹'; nl.onclick=()=>{CUR=addDays(CUR,-7);renderToday();}; wkEl.appendChild(nl);
+  const wkEl=$('week'); const mon=monday(CUR), sun=addDays(mon,6), md=d=>`${+d.slice(5,7)}月${+d.slice(8)}日`;
+  let wh=`<div class="wkhd"><b>${md(mon)} – ${mon.slice(5,7)===sun.slice(5,7)?+sun.slice(8)+'日':md(sun)}</b><span><button class="nav" data-n="-1" aria-label="上一周">‹</button><button class="nav" data-n="1" aria-label="下一周">›</button></span></div><div class="wkg">`;
   for(let i=0;i<7;i++){
-    const d=addDays(mon,i); const rr=DB.workouts[d]; const type=rr?rr.type:wk()[dow(d)];
-    const div=document.createElement('div'); div.className='d '+PLAN[type].cls+(combo(rr)?' plus':'')+(rr&&rr.finished?' done':'')+(d===CUR?' cur':'')+(d>TODAY?' future':'');
-    div.innerHTML=`<small>${'一二三四五六日'[i]}</small><b>${parseInt(d.slice(8))}</b><span class="dot"></span>`;
-    div.onclick=()=>{ if(d>TODAY){toast('还没到这天');return;} CUR=d; renderToday(); };
-    wkEl.appendChild(div);
+    const d=addDays(mon,i), rr=DB.workouts[d], type=rr?rr.type:wk()[dow(d)], ic=dayIcon(rr);
+    const cls='c'+(ic?' fill':'')+(d===TODAY?' today':'')+(d===CUR?' cur':'')+(d>TODAY?' fut':'');
+    wh+=`<div class="wd" data-d="${d}"><small>${'一二三四五六日'[i]}</small><div class="${cls}">${ic?ico(ic)+(combo(rr)?'<i class="badge"></i>':''):parseInt(d.slice(8))}</div><em>${SHORT[type]}${combo(rr)?'+跑':''}</em></div>`;
   }
-  const nr=document.createElement('div'); nr.className='nav'; nr.textContent='›'; nr.onclick=()=>{ if(addDays(mon,7)>TODAY){CUR=TODAY;}else CUR=addDays(CUR,7); renderToday(); }; wkEl.appendChild(nr);
+  wkEl.innerHTML=wh+'</div>';
+  wkEl.querySelectorAll('.wd').forEach(el=>el.onclick=()=>{ const d=el.dataset.d; if(d>TODAY){toast('还没到这天');return;} CUR=d; renderToday(); });
+  wkEl.querySelectorAll('.nav').forEach(b=>b.onclick=()=>{ if(b.dataset.n<0) CUR=addDays(CUR,-7); else CUR=addDays(mon,7)>TODAY?TODAY:addDays(CUR,7); renderToday(); });
   // 类型 chips
   const ch=$('typeChips'); ch.innerHTML='';
   PLANS.forEach(pp=>{ const on=pp.key==='run'?hasRun(r):pp.key===r.type; const c=document.createElement('div'); c.className='chip'+(on?' on':''); c.textContent=pp.name+(wk()[dow(CUR)]===pp.key?' ·计划':''); c.onclick=()=>{ pickType(r,pp.key); save(); renderToday(); }; ch.appendChild(c); });
@@ -557,7 +623,7 @@ function renderToday(){
   // 动作
   const list=$('exList'); list.innerHTML='';
   let total=0,done=0,vol=0;
-  if(p.ex.length===0){ list.innerHTML='<div class="card empty"><span>😴</span>休息日<br><small>睡够 7–8 小时，蛋白吃够，散步或拉伸 20 分钟都可以</small></div>'; }
+  if(p.ex.length===0){ list.innerHTML=`<div class="card empty"><div class="c fill">${ico('rest')}</div><b>休息日</b><small>睡够 7–8 小时，蛋白吃够，散步或拉伸 20 分钟都可以</small></div>`; }
   planExercises(r).forEach(x=>{
     const e=ensureSets(r,x,x.sets); const db=x.db;
     const allDone=e.sets.length>0&&e.sets.every(s=>s.done);
@@ -593,7 +659,7 @@ function renderToday(){
     });
     const foot=document.createElement('div'); foot.className='foot';
     foot.innerHTML=`<span class="last">${last?`上次 ${last.d.slice(5)}：${last.sets.filter(s=>s.w||s.r).map(s=>`${s.w||'-'}×${s.r||'-'}`).join(' / ')}${coach?'':'<br>'+progressHint(x,last,db)}`:(x.key==='run'?'填跑了多少公里、多少分钟，之后只用打勾':db.bw?`第一次做，目标每组 ${x.reps}，填实际做到的次数，之后只用打勾`:`第一次做，选一个能标准做到 ${rg||x.reps} 次、最后还剩 1–2 次余力的重量。填好第一组，下面几组会自动跟上`)}</span>
-      <span style="white-space:nowrap">${db.bw&&!db.wlabel?`<button class="sm ghost" data-a="w">${e.showW?'去掉负重':'加负重'}</button> `:''}<button class="sm ghost" data-a="del">−组</button> <button class="sm ghost" data-a="add">+组</button> <button class="sm ok" data-a="all">全部 ✓</button></span>`;
+      <span style="white-space:nowrap">${db.bw&&!db.wlabel?`<button class="sm ghost" data-a="w">${e.showW?'去掉负重':'加负重'}</button> `:''}<button class="sm ghost" data-a="del">−组</button> <button class="sm ghost" data-a="add">+组</button> <button class="sm" data-a="all">全部 ✓</button></span>`;
     foot.querySelector('[data-a=all]').onclick=()=>{ e.sets.forEach((s,i)=>{ fill(s,i); s.done=true; }); save(); renderToday(); vib(30); };
     const wb=foot.querySelector('[data-a=w]'); if(wb) wb.onclick=()=>{ e.showW=!e.showW; if(!e.showW) e.sets.forEach(s=>s.w=''); save(); renderToday(); };
     foot.querySelector('[data-a=add]').onclick=()=>{ const l=e.sets[e.sets.length-1]||{}; e.sets.push({w:l.w||'',r:l.r||'',done:false}); save(); renderToday(); };
@@ -879,13 +945,34 @@ function renderDiet(){
 
 // ---------- 记录页 ----------
 function e1rm(sets,id){ let b=0; const bw=id&&EXDB[id]&&EXDB[id].bw; sets.forEach(s=>{ const w=parseFloat(s.w),r=parseFloat(s.r); if(bw){ if(r>0) b=Math.max(b,(w>0?w:0)*(1+r/30)+r); } else if(w>0&&r>0){ b=Math.max(b,w*(1+r/30)); } }); return b; }
+let CALM=null;
+function renderCal(){
+  CALM=CALM||TODAY.slice(0,7); const [Y,M]=CALM.split('-').map(Number);
+  $('calTitle').textContent=`${Y}年${M}月`;
+  const first=CALM+'-01', last=iso(new Date(Y,M,0)), m0=monday(first), thisMon=monday(TODAY);
+  const met=m=>m<thisMon&&weekLifts(m)>=WK_GOAL, inCap=m=>m<thisMon?met(m):m===thisMon?(weekLifts(m)>=WK_GOAL||met(addDays(m,-7))):false;
+  const sk=streakWeeks();
+  let h='一二三四五六日'.split('').map(x=>`<div class="h">${x}</div>`).join('')+'<div class="h"></div>';
+  for(let m=m0; m<=last; m=addDays(m,7)){
+    for(let i=0;i<7;i++){ const d=addDays(m,i), r=DB.workouts[d], ic=dayIcon(r);
+      const cls='c'+(ic?' fill':'')+(d===TODAY?' today':'')+(d>TODAY?' fut':'');
+      h+=`<div class="cell${d.slice(0,7)!==CALM?' out':''}" data-d="${d}"><div class="${cls}">${ic?ico(ic)+(combo(r)?'<i class="badge"></i>':''):parseInt(d.slice(8))}</div></div>`; }
+    const n=weekLifts(m), cap=inCap(m), cc=cap?' cap'+(m>m0&&inCap(addDays(m,-7))?'':' top')+(addDays(m,7)<=last&&inCap(addDays(m,7))?'':' bot'):'';
+    let mark;
+    if(m===thisMon) mark=cap?`<div class="fire">${ICON.fire.replace('<path','<svg viewBox="0 0 24 26"><path')}</svg><b>${sk}</b></div>`:`<div class="o">${n}/${WK_GOAL}</div>`;
+    else mark=`<div class="o${met(m)?' met':''}">${met(m)?ico('chk'):''}</div>`;
+    h+=`<div class="sk${cc}">${mark}</div>`;
+  }
+  const cal=$('cal'); cal.innerHTML=h;
+  cal.querySelectorAll('.cell').forEach(el=>el.onclick=()=>{ const d=el.dataset.d; if(d<=TODAY){ CUR=d; go('today'); } });
+  $('kStreak').innerHTML=`${sk}<i>周</i>`;
+  $('kTotal').innerHTML=`${Object.values(DB.workouts).filter(r=>r.finished&&(r.type!=='rest'||otherMin(r)>0)).length}<i>次</i>`;
+  $('calNext').style.visibility=CALM>=TODAY.slice(0,7)?'hidden':'';
+}
+$('calPrev').onclick=()=>{ const [y,m]=CALM.split('-').map(Number); CALM=iso(new Date(y,m-2,1)).slice(0,7); renderCal(); };
+$('calNext').onclick=()=>{ const [y,m]=CALM.split('-').map(Number); CALM=iso(new Date(y,m,1)).slice(0,7); renderCal(); };
 function renderLog(){
-  const cal=$('cal'); cal.innerHTML='';
-  '一二三四五六日'.split('').forEach(h=>{const d=document.createElement('div');d.className='h';d.textContent=h;cal.appendChild(d);});
-  const start=addDays(monday(TODAY),-49);
-  for(let i=0;i<56;i++){ const d=addDays(start,i); const r=DB.workouts[d]; const div=document.createElement('div'); div.className='d';
-    if(r&&r.finished){ div.classList.add(PLAN[r.type].cls); if(combo(r)) div.classList.add('plus'); } if(d===TODAY) div.classList.add('today'); div.textContent=parseInt(d.slice(8)); if(d>TODAY) div.style.opacity=.3;
-    div.onclick=()=>{ if(d<=TODAY){ CUR=d; go('today'); } }; cal.appendChild(div); }
+  renderCal();
   const dates=Object.keys(DB.weights).sort().filter(d=>d>=addDays(TODAY,-90));
   const svg=$('chart'); svg.innerHTML='';
   if(dates.length>=2){
@@ -895,10 +982,10 @@ function renderLog(){
     const path=dates.map((d,i)=>(i?'L':'M')+x(d).toFixed(1)+','+y(DB.weights[d]).toFixed(1)).join(' ');
     // 7 日均线
     const avgp=dates.map((d,i)=>{ const win=dates.slice(Math.max(0,i-6),i+1); return (i?'L':'M')+x(d).toFixed(1)+','+y(win.reduce((s,k)=>s+DB.weights[k],0)/win.length).toFixed(1); }).join(' ');
-    svg.innerHTML=`<path d="${path}" fill="none" stroke="#3a4a7a" stroke-width="1.5"/><path d="${avgp}" fill="none" stroke="#5b8dff" stroke-width="2.5"/>`+
-      dates.map(d=>`<circle cx="${x(d)}" cy="${y(DB.weights[d])}" r="2.2" fill="#8fb0ff"/>`).join('')+
-      `<text x="2" y="12" fill="#8d93a1" font-size="10">${max.toFixed(1)}</text><text x="2" y="142" fill="#8d93a1" font-size="10">${min.toFixed(1)}</text>`;
-  } else svg.innerHTML='<text x="170" y="80" fill="#8d93a1" font-size="12" text-anchor="middle">记录 2 天以上体重后显示趋势</text>';
+    svg.innerHTML=`<path d="${path}" fill="none" style="stroke:var(--faint)" stroke-width="1.5"/><path d="${avgp}" fill="none" style="stroke:var(--accent)" stroke-width="2.5"/>`+
+      dates.map(d=>`<circle cx="${x(d)}" cy="${y(DB.weights[d])}" r="2.2" style="fill:var(--ink)"/>`).join('')+
+      `<text x="2" y="12" style="fill:var(--muted)" font-size="10">${max.toFixed(1)}</text><text x="2" y="142" style="fill:var(--muted)" font-size="10">${min.toFixed(1)}</text>`;
+  } else svg.innerHTML='<text x="170" y="80" style="fill:var(--muted)" font-size="12" text-anchor="middle">记录 2 天以上体重后显示趋势</text>';
   const avg=(a,b)=>{const ds=Object.keys(DB.weights).filter(d=>d>=a&&d<=b);return ds.length?ds.reduce((s,d)=>s+DB.weights[d],0)/ds.length:NaN;};
   const w7=avg(addDays(TODAY,-6),TODAY),wp=avg(addDays(TODAY,-13),addDays(TODAY,-7)),wm=avg(addDays(TODAY,-36),addDays(TODAY,-30));
   const f=(v,sign)=>isNaN(v)?'--':(sign&&v>0?'+':'')+v.toFixed(1);
