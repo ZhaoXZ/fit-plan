@@ -29,7 +29,7 @@
   --chk:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4L18 8'/%3E%3C/svg%3E");--ok:#4ade80;--warn:#fbbf24;--danger:#f87171;--shadow:none;--glass:rgba(0,0,0,.82);color-scheme:dark;
 }}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{scroll-behavior:smooth;overscroll-behavior-y:none}
+html{overscroll-behavior-y:none}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:calc(84px + env(safe-area-inset-bottom));overscroll-behavior-y:none}
 svg.i{width:22px;height:22px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
 header{position:sticky;top:0;z-index:5;background:var(--glass);backdrop-filter:saturate(1.6) blur(16px);-webkit-backdrop-filter:saturate(1.6) blur(16px);padding:calc(12px + env(safe-area-inset-top)) 18px 10px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
@@ -37,8 +37,13 @@ header h1{font-size:28px;line-height:1.15;margin:0;font-weight:800;letter-spacin
 header .sub{color:var(--muted);font-size:13px;margin-top:2px}
 main{padding:6px 14px 0;overflow-x:hidden}
 .ex .sets,.ex .head{min-width:0}
-.page{display:none}.page.active{display:block;animation:fade .2s ease}
-@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.page{display:none}.page.active{display:block}
+.page.in-r{animation:inR .34s cubic-bezier(.2,.8,.2,1)}.page.in-l{animation:inL .34s cubic-bezier(.2,.8,.2,1)}
+@keyframes inR{from{opacity:0;transform:translate3d(32px,0,0)}to{opacity:1;transform:none}}
+@keyframes inL{from{opacity:0;transform:translate3d(-32px,0,0)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+header h1,header .sub{transition:opacity .18s}header.swap h1,header.swap .sub{opacity:0;transition:none}
+@media (prefers-reduced-motion:reduce){.page.in-r,.page.in-l{animation:fade .15s ease}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
 .card h2{font-size:18px;margin:0 0 12px;color:var(--text);font-weight:750;letter-spacing:-.01em}
 .card h3{font-size:16px;margin:0 0 6px}
@@ -188,7 +193,7 @@ nav button.active svg.i{stroke-width:2.4}
 .sheet.drag .panel,.sheet.drag .dim{transition:none}
 .sheet .top{position:sticky;top:0;z-index:2;background:var(--card);display:flex;align-items:center;justify-content:space-between;padding:8px 0 4px}
 .sheet .top .x{width:36px;height:36px;border-radius:50%;background:var(--fill);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer}
-body.lock{overflow:hidden;position:fixed;left:0;right:0}
+html.lock,html.lock body{overflow:hidden}
 .sheet .grab{width:40px;height:5px;border-radius:3px;background:var(--line)}
 .sheet .gif{width:100%;max-width:220px;aspect-ratio:1;border-radius:20px;background:#fff;display:block;margin:0 auto 10px;object-fit:contain;border:1px solid var(--line)}
 .sheet h2{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0 0 2px}
@@ -850,11 +855,10 @@ function openSheet(id,opt){
   const lb=$('btnLv'); if(lb) lb.onclick=()=>{ setPushLv(db.lv-1); closeSheet(); };
   const us=$('btnUnswap'); if(us) us.onclick=()=>{ const r=rec(CUR); delete r.swap[id]; save(); closeSheet(); renderToday(); };
   const sh=$('sheet'), pn=$('sheetPanel');
-  if(!document.body.classList.contains('lock')){ SHEET_Y=window.scrollY; document.body.style.top=-SHEET_Y+'px'; document.body.classList.add('lock'); }
+  document.documentElement.classList.add('lock');
   pn.scrollTop=0; sh.classList.remove('drag'); pn.style.transform=''; pn.style.transition=''; $('sheetDim').style.opacity=''; $('sheetDim').style.transition='';
   if(!sh.classList.contains('show')){ void pn.offsetHeight; sh.classList.add('show'); }
 }
-let SHEET_Y=0;
 function closeSheet(v,d){ const sh=$('sheet'), pn=$('sheetPanel'), dim=$('sheetDim');
   sh.classList.remove('drag'); void pn.offsetHeight;
   if(v>0.55){ // 顺着甩动速度继续滑出，再略减速
@@ -864,7 +868,7 @@ function closeSheet(v,d){ const sh=$('sheet'), pn=$('sheetPanel'), dim=$('sheetD
     pn.style.transition='transform .5s cubic-bezier(.45,0,.55,1)'; dim.style.transition='opacity .5s ease-in-out';
   }
   pn.style.transform=''; dim.style.opacity=''; sh.classList.remove('show');
-  document.body.classList.remove('lock'); document.body.style.top=''; window.scrollTo(0,SHEET_Y); }
+  document.documentElement.classList.remove('lock'); }
 // 下滑关闭：跟手拖动，松手按位移或速度决定关闭/回弹
 (()=>{ const sh=$('sheet'), pn=$('sheetPanel'); let y0=null,dy=0,t0=0,lastY=0,lastT=0,v=0,active=false;
   pn.addEventListener('touchstart',e=>{ y0=lastY=e.touches[0].clientY; t0=lastT=e.timeStamp; dy=0; v=0; active=false; },{passive:true});
@@ -880,6 +884,7 @@ function closeSheet(v,d){ const sh=$('sheet'), pn=$('sheetPanel'), dim=$('sheetD
   pn.addEventListener('touchend',end); pn.addEventListener('touchcancel',end);
 })();
 $('sheetDim').addEventListener('click',()=>closeSheet());
+$('sheet').addEventListener('touchmove',e=>{ const pn=$('sheetPanel'); if(!pn.contains(e.target)||pn.scrollHeight<=pn.clientHeight) e.preventDefault(); },{passive:false});
 
 // ---------- 计划页 ----------
 function renderPlan(){
@@ -1042,13 +1047,18 @@ $('fileImport').onchange=e=>{ const f=e.target.files[0]; if(!f)return; const r=n
 $('btnReset').onclick=()=>{ if(confirm(SY.tok?'确定清空全部打卡和体重记录？云端也会一起清空，只能从历史版本找回。':'确定清空全部打卡和体重记录？建议先导出。')){ localStorage.removeItem(KEY); localStorage.removeItem('fitplan_v1'); DB=load(); save(); renderAll(); } };
 
 // ---------- 导航 ----------
-function go(page){
+const ORDER=['today','plan','diet','log']; let PAGE='today';
+function go(page,keep){
+  const prev=PAGE; PAGE=page; const moved=prev!==page&&!keep;
+  if(moved){ const h=document.querySelector('header'); h.classList.add('swap'); requestAnimationFrame(()=>requestAnimationFrame(()=>h.classList.remove('swap'))); }
   document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===page));
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));
   const titles={today:'今日训练',plan:'训练计划',diet:'饮食与体重',log:'打卡记录'};
   if(page!=='today'){ $('hdrTitle').textContent=titles[page]; $('hdrSub').textContent=TODAY; } 
   if(page==='today') renderToday(); if(page==='log') renderLog(); if(page==='plan') renderPlan(); if(page==='diet') renderDiet();
-  window.scrollTo(0,0);
+  if(keep) return;
+  window.scrollTo({top:0,left:0,behavior:moved?'instant':'smooth'});
+  if(moved){ const el=$('page-'+page); el.classList.remove('in-r','in-l'); void el.offsetWidth; el.classList.add(ORDER.indexOf(page)>ORDER.indexOf(prev)?'in-r':'in-l'); el.addEventListener('animationend',()=>el.classList.remove('in-r','in-l'),{once:true}); }
 }
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.page));
 function renderAll(){ renderToday(); renderPlan(); renderDiet(); renderLog(); }
@@ -1075,7 +1085,7 @@ function mergeDB(l,c){ // 两边都改过：按天保留记录更完整的一份
 }
 function applyDB(d){ // 换掉内存里的数据后整页重画，保持当前页和滚动位置
   localStorage.setItem(KEY,JSON.stringify(d)); DB=load(); SY.last=JSON.stringify(DB); localStorage.setItem(KEY,SY.last);
-  const pg=document.querySelector('.page.active').id.slice(5), y=scrollY; renderAll(); go(pg); scrollTo(0,y);
+  const pg=document.querySelector('.page.active').id.slice(5), y=scrollY; renderAll(); go(pg,true); scrollTo(0,y);
 }
 const typing=()=>/^(INPUT|TEXTAREA)$/.test((document.activeElement||{}).tagName||'');
 async function sync(){
