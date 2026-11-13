@@ -179,6 +179,8 @@ nav button.active svg.i{stroke-width:2.4}
 /* 休息计时 */
 .timer{position:fixed;left:12px;right:12px;bottom:calc(74px + env(safe-area-inset-bottom));z-index:6;background:var(--card);border:1.5px solid var(--ink);border-radius:22px;padding:12px 14px;display:none;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
 .timer.show{display:flex}
+.jump{position:fixed;right:14px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:6;display:none;align-items:center;gap:6px;padding:10px 16px;border-radius:999px;background:var(--ink);color:var(--on-ink);font-size:14px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.jump.show{display:flex}#page-today{padding-bottom:58px}.jump svg.i{width:18px;height:18px}
 .timer b{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;min-width:72px;letter-spacing:-.02em;line-height:1.1}
 .timer small{color:var(--muted);display:block;font-size:12px}
 .timer>div:first-child{flex:1;min-width:0}.timer small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -233,7 +235,7 @@ html.lock,html.lock body{overflow:hidden}
   <div id="exList"></div>
   <div id="otherBox"></div>
   <div id="coolBox"></div>
-  <div class="card">
+  <div class="card" id="mealCard">
     <h2 id="mealHd">今日饮食</h2>
     <div class="meals">
       <div><label class="f">热量 kcal</label><input type="number" inputmode="numeric" data-m="k"></div>
@@ -242,7 +244,7 @@ html.lock,html.lock body{overflow:hidden}
       <div><label class="f">脂肪 g</label><input type="number" inputmode="numeric" data-m="f"></div>
     </div>
     <p class="muted" id="mealSum" style="margin:8px 0"></p>
-    <div class="row" style="align-items:flex-end;margin-bottom:4px"><label class="f grow" style="margin:0">饮食总结</label><button class="sm ghost" id="btnPrompt">复制给 AI 的格式要求</button></div>
+    <div class="row" style="align-items:flex-end;margin-bottom:4px"><label class="f grow" style="margin:0">饮食总结</label><button class="sm ghost" id="btnPrompt">复制 AI 格式</button><button class="sm" id="btnPaste">一键粘贴</button></div>
     <textarea id="mealTxt" rows="3" placeholder="粘贴 AI 写的当天饮食总结，上面四个数会自动填好"></textarea>
   </div>
   <div class="card">
@@ -440,6 +442,7 @@ html.lock,html.lock body{overflow:hidden}
 </nav>
 
 <div class="sheet" id="sheet"><div class="dim" id="sheetDim"></div><div class="panel" id="sheetPanel"></div></div>
+<button class="jump" id="jumpBtn" aria-label="跳转"></button>
 <div class="toast" id="toast"></div>
 <div class="login" id="login"><form id="loginF">
   <h1>健身计划</h1>
@@ -768,16 +771,16 @@ function renderCoach(){
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden && iso(new Date())!==TODAY) location.reload(); });
 function weekCount(d){ const m=monday(d); let c=0; for(let i=0;i<7;i++){ const r=DB.workouts[addDays(m,i)]; if(r&&r.finished&&/upper|lower/.test(r.type)) c++; } return c; }
 $('dayWeight').addEventListener('input',e=>{ const v=parseFloat(e.target.value); if(v>0){ DB.weights[CUR]=v; if(CUR===TODAY){ DB.settings.weight=v; } } else delete DB.weights[CUR]; save(); });
-function growTA(t){ t.style.height='auto'; t.style.height=(t.scrollHeight+3)+'px'; } // 备注框跟着内容长高，改长段文字不用在一行里来回挪
+function growTA(t){ if(!t.offsetParent){ t.style.height=''; return; } t.style.height='auto'; t.style.height=(t.scrollHeight+3)+'px'; } // 备注框跟着内容长高，改长段文字不用在一行里来回挪
 $('dayNote').addEventListener('input',e=>{ rec(CUR).note=e.target.value; growTA(e.target); save(); });
 function mealSum(r){ const m=DB.meals[CUR]||{}, P=kcalPlan(); if(!P){ $('mealSum').textContent=''; return; }
   const run=activeDay(r)?1:0, T=[['k','热量',P.kcal+run*300,''],['p','蛋白',P.pro,'g'],['c','碳水',P.carb+run*75,'g'],['f','脂肪',P.fat,'g']];
   $('mealSum').textContent=(run?(hasRun(r)?'跑步日':'运动日'):'')+'目标 '+T.map(([k,n,t,u])=>{ const v=parseFloat(m[k]), g=Math.round(v-t); return `${n} ${t}${u}`+(v>=0?(g>0?`（超 ${g}）`:g<0?`（差 ${-g}）`:'（正好）'):''); }).join(' · '); }
 function renderMeals(r){ const m=DB.meals[CUR]||{}; $('mealHd').textContent=(CUR===TODAY?'今日':CUR.slice(5)+' ')+'饮食'+(m.src==='agent'?' · agent 已同步':'');
-  document.querySelectorAll('[data-m]').forEach(el=>{ el.value=m[el.dataset.m]||''; }); $('mealTxt').value=m.t||''; mealSum(r); }
+  document.querySelectorAll('[data-m]').forEach(el=>{ el.value=m[el.dataset.m]||''; }); $('mealTxt').value=m.t||''; growTA($('mealTxt')); mealSum(r); }
 function setMeal(k,v){ const m=DB.meals[CUR]=DB.meals[CUR]||{}; if(v) m[k]=v; else delete m[k]; if(m.src){ delete m.src; $('mealHd').textContent=$('mealHd').textContent.replace(' · agent 已同步',''); } m.ts=Date.now(); if(Object.keys(m).length<=1) delete DB.meals[CUR]; save(); mealSum(rec(CUR)); }
 document.querySelectorAll('[data-m]').forEach(el=>el.addEventListener('input',()=>setMeal(el.dataset.m,el.value)));
-$('mealTxt').addEventListener('input',e=>setMeal('t',e.target.value));
+$('mealTxt').addEventListener('input',e=>{ setMeal('t',e.target.value); growTA(e.target); });
 // 从粘贴的总结里读出全天四个数，范围取上限。只在读出的数字变了时覆盖，手动改过的不会被冲掉
 function parseMeal(t){ const o={}, num='(\\d+(?:\\.\\d+)?)(?:\\s*[-–~～至到]\\s*(\\d+(?:\\.\\d+)?))?';
   [['k','热量|卡路里|总热量'],['p','蛋白质?'],['c','碳水(?:化合物)?'],['f','脂肪']].forEach(([k,lb])=>{
@@ -799,6 +802,20 @@ const MEAL_PROMPT=`请按下面的格式总结我今天全天的饮食，只输�
 一句话点评：
 
 全天合计里每项只写一个数，估不准就取偏高的那个。`;
+// 一键粘贴：iPhone 会先弹一个「粘贴」小气泡，点一下才把剪贴板交给网页
+$('btnPaste').onclick=async()=>{ let t='';
+  try{ t=((await navigator.clipboard.readText())||'').trim(); }catch(e){ $('mealTxt').focus(); toast('没拿到剪贴板，长按输入框选「粘贴」'); return; }
+  if(!t){ toast('剪贴板是空的'); return; }
+  const got=parseMeal(t); if(!Object.keys(got).length&&!/热量|蛋白|kcal|早餐|午餐|晚餐/.test(t)){ toast('剪贴板里不像饮食总结，没有粘贴'); return; }
+  const had=!!$('mealTxt').value.trim(); $('mealTxt').value=t; setMeal('t',t); autoMeal(); growTA($('mealTxt'));
+  toast((had?'已替换原来的总结':'已粘贴')+(Object.keys(got).length?`，读出 ${Object.keys(got).length} 个数`:'，没读出数字，可以手动填')); };
+// 右下角跳转：在饮食卡片上方时跳到饮食，看到饮食后变成回到顶部
+function jumpUI(){ const b=$('jumpBtn'); if(!$('page-today').classList.contains('active')||$('timer').classList.contains('show')){ b.classList.remove('show'); return; }
+  const top=$('mealCard').getBoundingClientRect().top, to=top>innerHeight-140?'meal':scrollY>300?'top':'';
+  if(to!==b.dataset.to){ b.dataset.to=to; b.innerHTML=to==='meal'?ico('diet')+'饮食':to==='top'?'↑ 顶部':''; }
+  b.classList.toggle('show',!!to); }
+$('jumpBtn').onclick=()=>{ if($('jumpBtn').dataset.to==='meal'){ const y=$('mealCard').getBoundingClientRect().top+scrollY-document.querySelector('header').offsetHeight-10; scrollTo({top:y,behavior:'smooth'}); } else scrollTo({top:0,behavior:'smooth'}); };
+let jumpRaf=0; addEventListener('scroll',()=>{ if(!jumpRaf) jumpRaf=requestAnimationFrame(()=>{ jumpRaf=0; jumpUI(); }); },{passive:true}); addEventListener('resize',jumpUI);
 $('btnPrompt').onclick=async()=>{ try{ await navigator.clipboard.writeText(MEAL_PROMPT); toast('已复制，发给你的 AI，以后它就按这个格式写'); }catch(e){ showDump(MEAL_PROMPT); } };
 // 其他运动：徒步、骑车、球类等，只记类型和分钟
 function renderOther(r){ const el=$('otherBox'); const os=r.other||[];
@@ -817,10 +834,10 @@ $('btnFinish').onclick=()=>{ const r=rec(CUR); r.finished=!r.finished;
 // ---------- 休息计时 ----------
 let T={end:0,total:0,h:null,wl:null};
 const tLeft=()=>Math.max(0,Math.round((T.end-Date.now())/1000));
-function startTimer(sec,name){ stopTimer(); audioUnlock(); T.total=sec; T.end=Date.now()+sec*1000; $('tName').textContent=name+' · 休息'; sndUI(); tick(); $('timer').classList.add('show'); T.h=setInterval(tick,250); wakeOn(); }
+function startTimer(sec,name){ stopTimer(); audioUnlock(); T.total=sec; T.end=Date.now()+sec*1000; $('tName').textContent=name+' · 休息'; sndUI(); tick(); $('timer').classList.add('show'); T.h=setInterval(tick,250); wakeOn(); jumpUI(); }
 function tick(){ const l=tLeft(); $('tLeft').textContent=`${Math.floor(l/60)}:${pad(l%60)}`; $('tBar').style.width=(l/T.total*100)+'%';
   if(l<=0){ stopTimer(); vib([100,80,100]); const ok=!DB.settings.sound||beep(); toast(ok?'休息结束，下一组':'休息结束 · 提示音被系统暂停，点一下屏幕即可恢复'); } }
-function stopTimer(){ clearInterval(T.h); T.h=null; $('timer').classList.remove('show'); wakeOff(); }
+function stopTimer(){ clearInterval(T.h); T.h=null; $('timer').classList.remove('show'); wakeOff(); jumpUI(); }
 $('tPlus').onclick=()=>{ T.end+=30000; T.total+=30; tick(); };
 $('tSkip').onclick=stopTimer;
 $('tSnd').onclick=()=>{ setSound(!DB.settings.sound); };
@@ -1071,6 +1088,7 @@ function go(page,keep){
   const titles={today:'今日训练',plan:'训练计划',diet:'饮食与体重',log:'打卡记录'};
   if(page!=='today'){ $('hdrTitle').textContent=titles[page]; $('hdrSub').textContent=TODAY; } 
   if(page==='today') renderToday(); if(page==='log') renderLog(); if(page==='plan') renderPlan(); if(page==='diet') renderDiet();
+  requestAnimationFrame(jumpUI);
   if(keep) return;
   window.scrollTo({top:0,left:0,behavior:moved?'instant':'smooth'});
   if(moved){ const el=$('page-'+page); el.classList.remove('in-r','in-l'); void el.offsetWidth; el.classList.add(ORDER.indexOf(page)>ORDER.indexOf(prev)?'in-r':'in-l'); el.addEventListener('animationend',()=>el.classList.remove('in-r','in-l'),{once:true}); }
