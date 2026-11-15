@@ -180,7 +180,8 @@ nav button.active svg.i{stroke-width:2.4}
 .timer{position:fixed;left:12px;right:12px;bottom:calc(74px + env(safe-area-inset-bottom));z-index:6;background:var(--card);border:1.5px solid var(--ink);border-radius:22px;padding:12px 14px;display:none;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
 .timer.show{display:flex}
 .jump{position:fixed;right:14px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:6;display:none;align-items:center;gap:6px;padding:10px 16px;border-radius:999px;background:var(--ink);color:var(--on-ink);font-size:14px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.18)}
-.jump.show{display:flex}#page-today{padding-bottom:58px}.jump svg.i{width:18px;height:18px}
+.jump.show{display:flex}
+.whey{display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 12px;background:var(--fill);border-radius:14px}.whey b{font-size:14px}.whey small{display:block;color:var(--muted);font-size:12px;line-height:1.4}#wheyMinus{width:38px;padding-left:0;padding-right:0}#page-today{padding-bottom:58px}.jump svg.i{width:18px;height:18px}
 .timer b{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;min-width:72px;letter-spacing:-.02em;line-height:1.1}
 .timer small{color:var(--muted);display:block;font-size:12px}
 .timer>div:first-child{flex:1;min-width:0}.timer small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -243,6 +244,7 @@ html.lock,html.lock body{overflow:hidden}
       <div><label class="f">碳水 g</label><input type="number" inputmode="numeric" data-m="c"></div>
       <div><label class="f">脂肪 g</label><input type="number" inputmode="numeric" data-m="f"></div>
     </div>
+    <div class="whey"><div class="grow"><b>蛋白粉</b><small id="wheyTxt"></small></div><button class="sm ghost" id="wheyMinus" aria-label="减 1 勺">−</button><button class="sm" id="wheyPlus">+1 勺蛋白粉</button></div>
     <p class="muted" id="mealSum" style="margin:8px 0"></p>
     <div class="row" style="align-items:flex-end;margin-bottom:4px"><label class="f grow" style="margin:0">饮食总结</label><button class="sm ghost" id="btnPrompt">复制 AI 格式</button><button class="sm" id="btnPaste">一键粘贴</button></div>
     <textarea id="mealTxt" rows="3" placeholder="粘贴 AI 写的当天饮食总结，上面四个数会自动填好"></textarea>
@@ -773,11 +775,19 @@ function weekCount(d){ const m=monday(d); let c=0; for(let i=0;i<7;i++){ const r
 $('dayWeight').addEventListener('input',e=>{ const v=parseFloat(e.target.value); if(v>0){ DB.weights[CUR]=v; if(CUR===TODAY){ DB.settings.weight=v; } } else delete DB.weights[CUR]; save(); });
 function growTA(t){ if(!t.offsetParent){ t.style.height=''; return; } t.style.height='auto'; t.style.height=(t.scrollHeight+3)+'px'; } // 备注框跟着内容长高，改长段文字不用在一行里来回挪
 $('dayNote').addEventListener('input',e=>{ rec(CUR).note=e.target.value; growTA(e.target); save(); });
+// 蛋白粉单独记勺数，不写进上面四个数，这样晚上粘贴 AI 总结也不会把它冲掉。按 ON 金标准巧克力味 1 平勺约 30g
+const WHEY={k:120,p:24,c:3,f:1.5};
+const mealVal=(m,k)=>{ const v=parseFloat(m[k]), n=m.wp||0; return isNaN(v)&&!n?NaN:(isNaN(v)?0:v)+n*WHEY[k]; };
+function wheyUI(){ const n=(DB.meals[CUR]||{}).wp||0; $('wheyMinus').style.display=n?'':'none';
+  $('wheyTxt').textContent=n?`${n} 勺 · +${n*WHEY.k} kcal · +${n*WHEY.p}g 蛋白`:`1 平勺约 ${WHEY.k} kcal · ${WHEY.p}g 蛋白，不用写进 AI 总结`; }
+function setWhey(d){ const m=DB.meals[CUR]=DB.meals[CUR]||{}; const n=Math.max(0,(m.wp||0)+d); if(n) m.wp=n; else delete m.wp; m.ts=Date.now(); save(); wheyUI(); mealSum(rec(CUR)); vib(20);
+  if(d>0) toast(`已记第 ${n} 勺，今天蛋白粉共 ${n*WHEY.p}g`); }
+$('wheyPlus').onclick=()=>setWhey(1); $('wheyMinus').onclick=()=>setWhey(-1);
 function mealSum(r){ const m=DB.meals[CUR]||{}, P=kcalPlan(); if(!P){ $('mealSum').textContent=''; return; }
   const run=activeDay(r)?1:0, T=[['k','热量',P.kcal+run*300,''],['p','蛋白',P.pro,'g'],['c','碳水',P.carb+run*75,'g'],['f','脂肪',P.fat,'g']];
-  $('mealSum').textContent=(run?(hasRun(r)?'跑步日':'运动日'):'')+'目标 '+T.map(([k,n,t,u])=>{ const v=parseFloat(m[k]), g=Math.round(v-t); return `${n} ${t}${u}`+(v>=0?(g>0?`（超 ${g}）`:g<0?`（差 ${-g}）`:'（正好）'):''); }).join(' · '); }
+  $('mealSum').textContent=(run?(hasRun(r)?'跑步日':'运动日'):'')+'目标 '+T.map(([k,n,t,u])=>{ const v=mealVal(m,k), g=Math.round(v-t); return `${n} ${t}${u}`+(v>=0?(g>0?`（超 ${g}）`:g<0?`（差 ${-g}）`:'（正好）'):''); }).join(' · '); }
 function renderMeals(r){ const m=DB.meals[CUR]||{}; $('mealHd').textContent=(CUR===TODAY?'今日':CUR.slice(5)+' ')+'饮食'+(m.src==='agent'?' · agent 已同步':'');
-  document.querySelectorAll('[data-m]').forEach(el=>{ el.value=m[el.dataset.m]||''; }); $('mealTxt').value=m.t||''; growTA($('mealTxt')); mealSum(r); }
+  document.querySelectorAll('[data-m]').forEach(el=>{ el.value=m[el.dataset.m]||''; }); $('mealTxt').value=m.t||''; growTA($('mealTxt')); wheyUI(); mealSum(r); }
 function setMeal(k,v){ const m=DB.meals[CUR]=DB.meals[CUR]||{}; if(v) m[k]=v; else delete m[k]; if(m.src){ delete m.src; $('mealHd').textContent=$('mealHd').textContent.replace(' · agent 已同步',''); } m.ts=Date.now(); if(Object.keys(m).length<=1) delete DB.meals[CUR]; save(); mealSum(rec(CUR)); }
 document.querySelectorAll('[data-m]').forEach(el=>el.addEventListener('input',()=>setMeal(el.dataset.m,el.value)));
 $('mealTxt').addEventListener('input',e=>{ setMeal('t',e.target.value); growTA(e.target); });
@@ -801,7 +811,8 @@ const MEAL_PROMPT=`请按下面的格式总结我今天全天的饮食，只输�
 全天合计：热量 X kcal，蛋白 X g，碳水 X g，脂肪 X g
 一句话点评：
 
-全天合计里每项只写一个数，估不准就取偏高的那个。`;
+全天合计里每项只写一个数，估不准就取偏高的那个。
+蛋白粉不要算进来，我在页面上单独记。`;
 // 一键粘贴：iPhone 会先弹一个「粘贴」小气泡，点一下才把剪贴板交给网页
 $('btnPaste').onclick=async()=>{ let t='';
   try{ t=((await navigator.clipboard.readText())||'').trim(); }catch(e){ $('mealTxt').focus(); toast('没拿到剪贴板，长按输入框选「粘贴」'); return; }
