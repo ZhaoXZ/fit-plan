@@ -566,12 +566,13 @@ function lastSession(exId,before){
   for(const d of ds){ const e=DB.workouts[d].ex[exId]; if(e&&e.sets&&e.sets.some(s=>s.done)) return {d,sets:e.sets.filter(s=>s.done)}; }
   return null;
 }
-const coachOf=id=>{ const c=DB.coach; return c&&CUR>=c.d&&c.ex?c.ex[id]:null; }; // 复盘后写进云端的下次建议
+// 复盘后写进云端的下次建议。同一个动作在不同训练日次数区间不同（比如高位下拉替代引体那天是 6–10），可以用「id@训练类型」单独写
+const coachOf=(id,t)=>{ const c=DB.coach; return c&&CUR>=c.d&&c.ex?c.ex[id+'@'+t]||c.ex[id]:null; };
 function ensureSets(r,ex,n){
   if(!r.ex[ex.id]) r.ex[ex.id]={sets:[]};
   const e=r.ex[ex.id];
   if(e.sets.length===0){
-    const last=lastSession(ex.id,CUR), c=coachOf(ex.id);
+    const last=lastSession(ex.id,CUR), c=coachOf(ex.id,r.type);
     for(let i=0;i<n;i++){ const ls=last&&last.sets[i]||last&&last.sets[last.sets.length-1]||{}; e.sets.push(c&&c.w?{w:c.w,r:'',done:false}:{w:ls.w||'',r:ls.r||'',done:false}); }
   }
   return e;
@@ -602,7 +603,7 @@ function wcRow(it){
 }
 function rampRow(r){ // 第一个大动作的热身组，有上次重量就给具体数字
   const x=planExercises(r).find(q=>q.key!=='run'&&!q.home); if(!x||x.db.bw) return '';
-  const last=lastSession(x.id,CUR), c=coachOf(x.id); const w=c&&parseFloat(c.w)||(last?Math.max(0,...last.sets.map(s=>parseFloat(s.w)||0)):0);
+  const last=lastSession(x.id,CUR), c=coachOf(x.id,r.type); const w=c&&parseFloat(c.w)||(last?Math.max(0,...last.sets.map(s=>parseFloat(s.w)||0)):0);
   const bar=x.db.equipment==='barbell'?20:0; const rd=v=>Math.max(bar,Math.round(v/2.5)*2.5);
   let txt='先用正式重量的一半做 8 个，再用七成半做 4 个';
   if(w){ const a=rd(w*.5),b=rd(w*.75); txt=a<b&&b<w?`${c&&c.w?'今天':'上次'} ${w}kg：先 ${a}kg × 8，再 ${b}kg × 4`:'用明显轻于正式重量的重量做 8 个'; }
@@ -655,7 +656,7 @@ function renderToday(){
     const e=ensureSets(r,x,x.sets); const db=x.db;
     const allDone=e.sets.length>0&&e.sets.every(s=>s.done);
     e.sets.forEach(s=>{ total++; if(s.done){done++; vol+=(parseFloat(s.w)||0)*(parseFloat(s.r)||0);} });
-    const last=lastSession(x.id,CUR), coach=coachOf(x.id);
+    const last=lastSession(x.id,CUR), coach=coachOf(x.id,r.type);
     const card=document.createElement('div'); card.className='ex'+(allDone?' done':'');
     card.innerHTML=`<div class="head">
         <img class="thumb" src="${db.img}" alt="" loading="lazy">
